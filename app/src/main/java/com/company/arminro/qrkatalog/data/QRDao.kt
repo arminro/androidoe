@@ -38,7 +38,7 @@ interface QRDao {
     fun add(dataToAdd: CodeData)
 
     @Delete
-    fun delete(vararg dataToDelete: CodeData)
+    fun delete(dataToDelete: CodeData)
 
     @Update
     fun update(newData: CodeData)
