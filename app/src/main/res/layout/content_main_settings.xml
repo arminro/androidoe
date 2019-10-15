@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="@dimen/activity_horizontal_margin">
+
+    <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/settings_text"
+            android:ems="10"
+            android:id="@+id/settings_text" android:layout_weight="1"/>
+    <Switch
+            android:text="@string/settings_matches_start"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/startSwitch"
+            android:layout_weight="1"
+            android:switchMinWidth="@dimen/switch_length"/>
+
+    <Switch
+            android:text="@string/settings_matches_on_end_"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/endSwitch"
+            android:layout_weight="1"
+            android:switchMinWidth="@dimen/switch_length"/>
+</LinearLayout>

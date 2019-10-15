@@ -9,4 +9,20 @@
     <string name="title_activity_scanner">ScannerActivity</string>
     <string name="dummy_button">Dummy Button</string>
     <string name="dummy_content">DUMMY\nCONTENT</string>
+    <string name="settings_title">Settings</string>
+    <string name="settings_text">Adjust how the filter should work</string>
+    <string name="settings_matches_start">Allow matches on beginning of results</string>
+    <string name="settings_matches_on_end_">Allow matches on end of results</string>
+    <string name="data_list_company_text">Issuer</string>
+    <string name="data_list_from_text">Destination</string>
+    <string name="data_list_to_text">To</string>
+    <string-array name="FilterCategories">
+        <item>Select a category</item>
+        <item>Source</item>
+        <item>Destination</item>
+        <item>Company</item>
+        <item>Earlier than</item>
+        <item>Later than</item>
+        <item>Between</item>
+    </string-array>
 </resources>
