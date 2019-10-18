@@ -1,6 +1,71 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
+<RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/data_list_holder"
+        android:padding="@dimen/fab_margin"
+        android:background="@color/colorAccent" xmlns:android="http://schemas.android.com/apk/res/android">
+    <TextView
+            android:text="timestamp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/timestamp_details"
+            android:paddingVertical="@dimen/activity_vertical_margin"
+            android:textSize="20sp"/>
+    <TextView
+            android:text="@string/data_list_company_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/companyText_details"
+            android:textAllCaps="true"
+            android:layout_below="@id/timestamp_details"/>
+    <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/companyField_details"
+            android:layout_toEndOf="@id/companyText_details"
+            android:layout_below="@id/timestamp_details"
+            android:paddingHorizontal="@dimen/fab_margin"
+            android:text="SAMPLE"/>
+
+    <TextView
+            android:text="@string/data_list_from_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/fromText_details"
+            android:textAllCaps="true"
+            android:layout_below="@id/companyText_details"/>
+    <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/fromField_details"
+            android:layout_toEndOf="@id/fromText_details"
+            android:layout_below="@id/companyText_details"
+            android:paddingHorizontal="@dimen/fab_margin"
+            android:text="SAMPLE FROM"/>
+
+    <TextView
+            android:text="@string/data_list_to_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/toText_details"
+            android:textAllCaps="true"
+            android:layout_below="@id/fromText_details"/>
+    <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/toField_details"
+            android:layout_toEndOf="@id/toText_details"
+            android:layout_below="@id/fromText_details"
+            android:paddingHorizontal="@dimen/fab_margin"
+            android:text="SAMPLE FOR"/>
+    <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/description_details"
+            android:layout_below="@id/toField_details"
+            android:paddingVertical="@dimen/fab_margin"
+            android:text="DETAILS"
+            android:textStyle="italic"/>
 
 </RelativeLayout>

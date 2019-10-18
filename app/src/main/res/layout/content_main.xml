@@ -10,8 +10,6 @@
         tools:context=".MainActivity">
 
 
-
-
     <Spinner
             android:layout_width="346dp"
             android:layout_height="27dp" tools:layout_editor_absoluteY="16dp"
@@ -24,10 +22,23 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"/>
 
-    <android.support.v7.widget.RecyclerView
-            android:layout_width="345dp"
-            android:layout_height="295dp"
-            tools:layout_editor_absoluteY="137dp" tools:layout_editor_absoluteX="20dp"/>
+    <ListView
+            android:layout_width="match_parent"
+            android:layout_height="399dp"
+            android:layout_marginBottom="8dp"
+            android:id="@+id/mainList"
+            android:verticalSpacing="20dp"
+            android:horizontalSpacing="20dp"
+            android:focusable="true"
+            android:longClickable="true"
+            android:contextClickable="true"
+            android:padding="@dimen/fab_margin"
+            android:divider="@android:color/transparent"
+            android:dividerHeight="10.0sp"
+            android:scrollbars="none"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/dynamic_anchor" app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" app:layout_constraintHorizontal_bias="0.5"/>
 
 
 </android.support.constraint.ConstraintLayout>

@@ -1,79 +1,145 @@
 package com.company.arminro.qrkatalog
 
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.content.Context
 import android.os.Bundle
-import android.support.design.widget.Snackbar
-import android.support.design.widget.NavigationView
-import android.support.v4.view.GravityCompat
-import android.support.v7.app.ActionBarDrawerToggle
 import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
-import android.view.LayoutInflater
-import android.view.Menu
-import android.view.MenuItem
-import android.view.View
 import android.widget.*
-import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.app_bar_main.*
-import android.view.ViewGroup
-import android.widget.TextView
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
-import android.view.MotionEvent
-import android.widget.DatePicker
-import kotlinx.android.synthetic.main.double_datetime_picker.*
-import java.time.Month
-import java.time.MonthDay
+import android.arch.persistence.room.Room
+import android.content.Intent
+import android.view.*
+import com.company.arminro.qrkatalog.data.QRDao
+import com.company.arminro.qrkatalog.data.QRDao_Impl
+import com.company.arminro.qrkatalog.data.QRDataBase
+import com.company.arminro.qrkatalog.model.CodeData
+import com.company.arminro.qrkatalog.helpers.MainListAdapter
+import kotlinx.android.synthetic.main.content_main.*
 import java.util.*
-import javax.xml.datatype.DatatypeConstants.MONTHS
+import kotlin.reflect.KClass
+import com.company.arminro.qrkatalog.helpers.loadDataFromSharedPreferences
+import com.company.arminro.qrkatalog.helpers.saveDataToSharedPReferences
+import com.company.arminro.qrkatalog.logic.QRProcessor
 
 
-class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
+class MainActivity : AppCompatActivity(){
 
-    private var starMatchEnabled = false
-    private var endMatchEnabled = false
+    private var startMatchEnabled =  false
+    private var endMatchEnabled =  false
+    private var mainAdapter: MainListAdapter? = null
+
+    // normally, this would be handled by a DI container like Dagger, but to keep it simple, we use Poor Man's DI here
+    private var logic: QRProcessor? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
 
+        val dao = QRDao_Impl(
+            Room.databaseBuilder(applicationContext, QRDataBase::class.java, "qr_db").build())
+        if(dao != null){
+            logic = QRProcessor(dao)
+        }
+
+
+        startMatchEnabled = loadDataFromSharedPreferences(this, getString(R.string.settings_matches_start)) ?: false
+        endMatchEnabled = loadDataFromSharedPreferences(this, getString(R.string.end_match)) ?: false
+        val extras = intent.extras
+
+        val rawData = extras?.get(getString(R.string.qr_data_intent_extra)) as? CodeData
+        // if we are given a new value, we save it to the db
+
+        if(rawData != null){
+            logic?.add(rawData) // smart cast!!! this will not compile without the null checking!
+        }
+
         fab.setOnClickListener { view ->
-            Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                .setAction("Action", null).show()
+            startCustomActivity(this, ScannerActivity::class)
         }
 
-        val toggle = ActionBarDrawerToggle(
-            this, drawer_layout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close
-        )
-        drawer_layout.addDrawerListener(toggle)
-        toggle.syncState()
-
-        nav_view.setNavigationItemSelectedListener(this)
+        setupList(this)
         setFilterCategories(this)
+        registerForContextMenu(mainList)
     }
 
-    override fun onBackPressed() {
-        if (drawer_layout.isDrawerOpen(GravityCompat.START)) {
-            drawer_layout.closeDrawer(GravityCompat.START)
-        } else {
-            super.onBackPressed()
+
+    private fun startCustomActivity(context: Context, cls: KClass<out Activity>, data: CodeData? = null) {
+
+        // based on: https://medium.com/@ihordzikovskyy/simplifying-passing-data-between-activities-in-android-with-kotlin-19a18125bee2
+        val intent = Intent(context, cls.java)
+        if(data!= null){
+            intent.putExtra(getString(R.string.qr_data_intent_extra), data)
         }
+        startActivity(intent)
     }
+
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        // Inflate the menu; this adds items to the action bar if it is present.
 
         menuInflater.inflate(R.menu.main, menu)
 
         return true
     }
 
+    override fun onCreateContextMenu(menu: ContextMenu?, v: View?, menuInfo: ContextMenu.ContextMenuInfo?) {
+        super.onCreateContextMenu(menu, v, menuInfo)
+        val inflater = menuInflater
+        inflater.inflate(R.menu.mainlist_context, menu)
+    }
+
+
+
+    override fun onContextItemSelected(item: MenuItem?): Boolean {
+    // based on: https://kotlintutorialspoint.wordpress.com/2018/03/30/context-menu-using-kotlin-in-android/
+        // get the element by casting the context menu info into adapter info
+        val info = item?.menuInfo as AdapterView.AdapterContextMenuInfo
+        val listPosition = info.position
+
+        val data = mainAdapter?.getItem(listPosition)
+
+        return when (item!!.itemId) {
+            R.id.mainListDetails ->{
+
+                val mDialogView = LayoutInflater.from(this).inflate(R.layout.data_details, null)
+                val mBuilder = AlertDialog.Builder(this@MainActivity)
+                    .setView(mDialogView)
+                    .setTitle("Details")
+                    .setPositiveButton("Edit"){dialog, which ->
+                        // the positive button will enable editing
+                        startCustomActivity(this,ScannerActivity::class, data)
+                    }
+                    .setNegativeButton("Cancel"){dialog,which ->
+                        dialog.cancel()
+                    }
+
+                val  mAlertDialog = mBuilder.show()
+                return true
+            }
+            R.id.mainListEdit ->{
+                startCustomActivity(this,ScannerActivity::class, data)
+                return true
+            }
+
+            R.id.mainListDelete ->{
+                // todo: delete
+                return  true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
+
+//
+        //Toast.makeText(this@MainActivity, " " + selectedItemTitle + " " + name, Toast.LENGTH_LONG).show()
+
+        return true
+    }
+
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
+
         when (item.itemId) {
             R.id.action_settings -> {
 
@@ -88,14 +154,23 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
                 // hooking switch isEnabled to local fields
                 var startSwitch  = mDialogView.findViewById<Switch>(R.id.startSwitch)
+                startSwitch.isChecked = startMatchEnabled
+
                 startSwitch.setOnCheckedChangeListener { _, isChecked ->
-                    starMatchEnabled = isChecked
-                    Toast.makeText(this@MainActivity, "Start ${if (starMatchEnabled) "enabled" else "disabled"}", Toast.LENGTH_SHORT).show()
+                    startMatchEnabled = isChecked
+
+                    // save it to shared preferences for persistence, so that the options will remain after closing the app
+                    saveDataToSharedPReferences(this, getString(R.string.settings_matches_start), isChecked)
+
+                    Toast.makeText(this@MainActivity, "Start ${if (startMatchEnabled) "enabled" else "disabled"}", Toast.LENGTH_SHORT).show()
                 }
 
                 var endSwitch  = mDialogView.findViewById<Switch>(R.id.endSwitch)
+                endSwitch.isChecked = endMatchEnabled
                 endSwitch.setOnCheckedChangeListener { _, isChecked ->
                     endMatchEnabled = isChecked
+
+                    saveDataToSharedPReferences(this, getString(R.string.end_match), isChecked)
                     Toast.makeText(this@MainActivity, "End ${if (endMatchEnabled) "enabled" else "disabled"}", Toast.LENGTH_SHORT).show()
                 }
 
@@ -105,27 +180,6 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         }
     }
 
-    override fun onNavigationItemSelected(item: MenuItem): Boolean {
-        // Handle navigation view item clicks here.
-        when (item.itemId) {
-            R.id.nav_camera -> {
-                // Handle the camera action
-            }
-            R.id.nav_gallery -> {
-
-            }
-            R.id.nav_slideshow -> {
-
-            }
-            R.id.nav_manage -> {
-
-            }
-
-        }
-
-        drawer_layout.closeDrawer(GravityCompat.START)
-        return true
-    }
 
     private fun setFilterCategories(ctx: Context){
         // based on: https://camposha.info/kotlin-android-spinner-fill-from-array-and-itemselectionlistener
@@ -236,7 +290,6 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
                 }
 
-
             }
         }
 
@@ -246,6 +299,17 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         val insertPoint = findViewById<ViewGroup>(anchorId)
         if(insertPoint.childCount > 0)
             insertPoint.removeAllViews()
+    }
+
+    private fun setupList(context: Context){
+
+        val data = logic?.getAll()
+        if(data != null){
+            // attaching a layout manager, then filling it with the given data using the adapter
+            mainAdapter = MainListAdapter(context, data) // hardcoded adapter will be used
+            mainList.adapter = mainAdapter
+        }
+
     }
 }
 

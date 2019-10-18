@@ -1,10 +1,13 @@
 package com.company.arminro.qrkatalog.logic
 
+import android.arch.lifecycle.LiveData
 import android.arch.persistence.room.Room
 import android.content.Context
 import com.company.arminro.qrkatalog.data.QRDao
 import com.company.arminro.qrkatalog.data.QRDataBase
 import com.company.arminro.qrkatalog.model.CodeData
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 class QRProcessor {
     private var repo: QRDao? = null
@@ -76,7 +79,7 @@ class QRProcessor {
         return repo?.getById(id)
     }
 
-    fun add(dataToAdd: CodeData){
+    suspend fun add(dataToAdd: CodeData) = withContext(Dispatchers.IO){
         repo?.add(dataToAdd)
     }
 

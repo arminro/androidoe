@@ -1,23 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:layout_width="match_parent"
-              android:layout_height="match_parent"
-              android:orientation="vertical">
-    <TextView
-            android:text="TextView"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:id="@+id/detailsMenuText"/>
-
-    <TextView
-            android:text="TextView"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:id="@+id/editMenuText"/>
-    <TextView
-            android:text="TextView"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:id="@+id/deleteMenuText"/>
-
-</LinearLayout>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+      xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item android:id="@+id/mainListDetails"
+          android:title="details"
+          android:orderInCategory="100"
+          app:showAsAction="never"/>
+    <item android:id="@+id/mainListEdit"
+          android:title="edit"
+          android:orderInCategory="100"
+          app:showAsAction="never"/>
+    <item android:id="@+id/mainListDelete"
+          android:title="delete"
+          android:orderInCategory="100"
+          app:showAsAction="never"/>
+</menu>

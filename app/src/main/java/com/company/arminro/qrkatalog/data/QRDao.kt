@@ -1,5 +1,6 @@
 package com.company.arminro.qrkatalog.data
 
+import android.arch.lifecycle.LiveData
 import android.arch.persistence.room.*
 import com.company.arminro.qrkatalog.model.CodeData
 import java.sql.Timestamp

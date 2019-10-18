@@ -1,11 +1,10 @@
-package com.company.arminro.qrkatalog.viewhelpers
+package com.company.arminro.qrkatalog.helpers
 
 import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
-import android.widget.TextView
 import com.company.arminro.qrkatalog.R
 import com.company.arminro.qrkatalog.model.CodeData
 import kotlinx.android.synthetic.main.data_list_element.view.*

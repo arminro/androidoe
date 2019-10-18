@@ -1,17 +1,12 @@
-package com.company.arminro.qrkatalog.viewhelpers
+package com.company.arminro.qrkatalog.helpers
 
 import android.content.Context
 import android.widget.TextView
 import android.support.v7.widget.RecyclerView
 import android.view.*
-import android.widget.Button
-import android.widget.EditText
 import com.company.arminro.qrkatalog.R
 import com.company.arminro.qrkatalog.model.CodeData
-import kotlinx.android.synthetic.main.content_main.view.*
 import kotlinx.android.synthetic.main.data_list_element.view.*
-import android.view.View.OnLongClickListener
-import android.view.View.inflate
 
 
 // based om: https://android.jlelse.eu/using-recyclerview-in-android-kotlin-722991e86bf3
