@@ -11,6 +11,7 @@ import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.view.LayoutInflater
+import android.view.View
 import android.widget.FrameLayout
 import android.widget.Toast
 import com.company.arminro.qrkatalog.helpers.getCurrentDateTimeString
@@ -21,14 +22,25 @@ import com.google.zxing.Result
 import kotlinx.android.synthetic.main.activity_scanner.*
 import kotlinx.android.synthetic.main.data_details.view.*
 import me.dm7.barcodescanner.zxing.ZXingScannerView
+import kotlin.properties.Delegates
 
 class ScannerActivity : AppCompatActivity(), ZXingScannerView.ResultHandler  {
     private var cameraId: Int = 0
     private var mScannerView: ZXingScannerView? = null
+    private var dataToUpdate: CodeData? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_scanner)
+
+        val extras = intent.extras
+
+        // if the activity sent an object to work with, this is an update instead of adding a new item
+        /* having a mechanism to explicitly tell the scanner activity that it is performing an update
+        * may be more elegant, but the scanner always scans a code then returns the result*/
+
+        dataToUpdate = extras?.get(getString(R.string.qr_data_intent_extra)) as? CodeData
+
         fab.setOnClickListener { view ->
             // todo: how to fire only on fab press
         }
@@ -60,29 +72,11 @@ class ScannerActivity : AppCompatActivity(), ZXingScannerView.ResultHandler  {
     }
 
 
-    // getting the first camera facing backwards
-    fun getCameraId(): Int {
-        var i = 0
-        try {
-            i = 0
-            while (i < Camera.getNumberOfCameras()) {
-                var info = Camera.CameraInfo()
-                Camera.getCameraInfo(i, info)
-                if (info.facing == Camera.CameraInfo.CAMERA_FACING_BACK) {
-                    Log.println(1, "CAM", "CAMERA CAPTURED")
-                    break
-                }
-                i++
-            }
-        } catch (e: Exception) {
-            Log.e("CAM", "Could not start the camera: " + e.message)
-        }
-        return i
-    }
+
 
 
     override fun handleResult(rawResult: Result) {
-        if (rawResult.text != null && rawResult.text.isNotEmpty() && fab.isPressed) {
+        if (rawResult.text != null && rawResult.text.isNotEmpty() /*&& fab.isPressed*/) {
             // parsing the text only if it is valid
             val text = rawResult.text
             var resultData: CodeData? = validateResultString(text)
@@ -90,47 +84,15 @@ class ScannerActivity : AppCompatActivity(), ZXingScannerView.ResultHandler  {
 
             if (resultData != null) {
 
-                mScannerView?.stopCameraPreview()
-                // asking the user if s/he wants to save the valid data
-                val mDialogView = LayoutInflater.from(this).inflate(R.layout.data_details, null)
-                val mBuilder = AlertDialog.Builder(this@ScannerActivity)
-                    .setView(mDialogView)
-                    .setTitle("Save the following?")
-                    .setPositiveButton("Save"){_, _ ->
-
-                        // stopping the camera and sending data to the other activity
-                        mScannerView?.stopCamera()
-                        val intent = Intent(this@ScannerActivity, MainActivity::class.java)
-                            .putExtra(getString(R.string.qr_data_intent_extra), resultData)
-                        startActivity(intent)
-                    }
-                    .setNegativeButton("Cancel"){dialog,which ->
-                        dialog.cancel()
-                    }
-                mDialogView.companyField_details.text = resultData.companyName
-                mDialogView.description_details.text = resultData.description
-                mDialogView.fromField_details.text = resultData.source
-                mDialogView.toField_details.text = resultData.destination
-                mDialogView.timestamp_details.text = resultData.timestampCreated
-
-                val  mAlertDialog = mBuilder.show()
+                promptUserToSaveData(resultData)
             }
 
-            mScannerView?.resumeCameraPreview(this)
         }
         else if(fab.isPressed){
             Toast.makeText(this, "The loaded QR Code is not valid", Toast.LENGTH_SHORT)
         }
-    }
+        mScannerView?.resumeCameraPreview(this)
 
-    private fun validateResultString(text: String?): CodeData? {
-        // this is a very rudimentary way of validation
-        val gson = Gson()
-        return try {
-            gson.fromJson(text, CodeData::class.java)
-        } catch (ex: JsonParseException){
-            null
-        }
     }
 
     override fun onRequestPermissionsResult(
@@ -151,6 +113,93 @@ class ScannerActivity : AppCompatActivity(), ZXingScannerView.ResultHandler  {
                 }
                 return
             }
+        }
+    }
+
+
+    // getting the first camera facing backwards
+    private fun getCameraId(): Int {
+        var i = 0
+        try {
+            i = 0
+            while (i < Camera.getNumberOfCameras()) {
+                var info = Camera.CameraInfo()
+                Camera.getCameraInfo(i, info)
+                if (info.facing == Camera.CameraInfo.CAMERA_FACING_BACK) {
+                    Log.println(1, "CAM", "CAMERA CAPTURED")
+                    break
+                }
+                i++
+            }
+        } catch (e: Exception) {
+            Log.e("CAM", "Could not start the camera: " + e.message)
+        }
+        return i
+    }
+
+    private fun promptUserToSaveData(resultData: CodeData) {
+        // asking the user if s/he wants to save the valid data
+        val mDialogView = createDialogView(resultData)
+
+        // this is actually cheating on kotlin null check
+        var titleString = "Save the following?"
+        var confirmString = "Save"
+
+        if(dataToUpdate != null){
+            titleString = "Edit existing with the following?"
+            confirmString = "Perform edit"
+        }
+
+
+        buildDialog(mDialogView, titleString, confirmString, resultData)
+            ?.show()
+    }
+
+    private fun buildDialog(
+        mDialogView: View?,
+        titleString: String,
+        confirmString: String,
+        resultData: CodeData
+    ): AlertDialog.Builder? {
+        val mBuilder = AlertDialog.Builder(this@ScannerActivity)
+            .setView(mDialogView)
+            .setTitle(titleString)
+            .setPositiveButton(confirmString) { _, _ ->
+
+                // stopping the camera and sending data to the other activity
+                mScannerView?.stopCamera()
+
+                if(dataToUpdate != null){
+                    resultData.id = dataToUpdate!!.id
+                }
+
+                val intent = Intent(this@ScannerActivity, MainActivity::class.java)
+                    .putExtra(getString(R.string.qr_data_intent_extra), resultData)
+                startActivity(intent)
+            }
+            .setNegativeButton("Cancel") { dialog, _ ->
+                dialog.cancel()
+            }
+        return mBuilder
+    }
+
+    private fun createDialogView(resultData: CodeData): View? {
+        val mDialogView = LayoutInflater.from(this).inflate(R.layout.data_details, null)
+        mDialogView.companyField_details.text = resultData.companyName
+        mDialogView.description_details.text = resultData.description
+        mDialogView.fromField_details.text = resultData.source
+        mDialogView.toField_details.text = resultData.destination
+        mDialogView.timestamp_details.text = resultData.timestampCreated
+        return mDialogView
+    }
+
+    private fun validateResultString(text: String?): CodeData? {
+        // this is a very rudimentary way of validation
+        val gson = Gson()
+        return try {
+            gson.fromJson(text, CodeData::class.java)
+        } catch (ex: JsonParseException){
+            null
         }
     }
 }

@@ -10,11 +10,9 @@ import android.widget.*
 import kotlinx.android.synthetic.main.app_bar_main.*
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
-import android.arch.persistence.room.Room
 import android.content.Intent
+import android.util.Log
 import android.view.*
-import com.company.arminro.qrkatalog.data.QRDao
-import com.company.arminro.qrkatalog.data.QRDao_Impl
 import com.company.arminro.qrkatalog.data.QRDataBase
 import com.company.arminro.qrkatalog.model.CodeData
 import com.company.arminro.qrkatalog.helpers.MainListAdapter
@@ -23,27 +21,31 @@ import java.util.*
 import kotlin.reflect.KClass
 import com.company.arminro.qrkatalog.helpers.loadDataFromSharedPreferences
 import com.company.arminro.qrkatalog.helpers.saveDataToSharedPReferences
-import com.company.arminro.qrkatalog.logic.QRProcessor
+import com.company.arminro.qrkatalog.logic.QRRepository
+import kotlinx.android.synthetic.main.data_details.view.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.launch
 
-
-class MainActivity : AppCompatActivity(){
+// using the main activity in coroutine context
+class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(){
 
     private var startMatchEnabled =  false
     private var endMatchEnabled =  false
     private var mainAdapter: MainListAdapter? = null
 
     // normally, this would be handled by a DI container like Dagger, but to keep it simple, we use Poor Man's DI here
-    private var logic: QRProcessor? = null
+    private var logic: QRRepository? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
 
-        val dao = QRDao_Impl(
-            Room.databaseBuilder(applicationContext, QRDataBase::class.java, "qr_db").build())
+        val dao = QRDataBase.getInstance(this).qRDao()
         if(dao != null){
-            logic = QRProcessor(dao)
+            logic = QRRepository(dao)
         }
 
 
@@ -55,7 +57,20 @@ class MainActivity : AppCompatActivity(){
         // if we are given a new value, we save it to the db
 
         if(rawData != null){
-            logic?.add(rawData) // smart cast!!! this will not compile without the null checking!
+
+            launch(Dispatchers.IO) {
+                if(rawData.id == null){
+                    logic?.add(rawData) // smart cast!!! this will not compile without the null checking!
+                    val asd = logic?.getAll()
+                    Log.println(Log.INFO, "ADD","ADDED: ${asd.toString()}")
+                }
+                else{
+                    logic?.update(rawData)
+                }
+
+                mainAdapter?.notifyDataSetChanged()
+            }
+            Toast.makeText(MainActivity@this, "Changes saved", Toast.LENGTH_SHORT).show()
         }
 
         fab.setOnClickListener { view ->
@@ -105,19 +120,8 @@ class MainActivity : AppCompatActivity(){
         return when (item!!.itemId) {
             R.id.mainListDetails ->{
 
-                val mDialogView = LayoutInflater.from(this).inflate(R.layout.data_details, null)
-                val mBuilder = AlertDialog.Builder(this@MainActivity)
-                    .setView(mDialogView)
-                    .setTitle("Details")
-                    .setPositiveButton("Edit"){dialog, which ->
-                        // the positive button will enable editing
-                        startCustomActivity(this,ScannerActivity::class, data)
-                    }
-                    .setNegativeButton("Cancel"){dialog,which ->
-                        dialog.cancel()
-                    }
-
-                val  mAlertDialog = mBuilder.show()
+                val mDialogView = buildParameterisedView(data)
+                buildDialogWithView(mDialogView, data)?.show()
                 return true
             }
             R.id.mainListEdit ->{
@@ -132,11 +136,10 @@ class MainActivity : AppCompatActivity(){
             else -> super.onOptionsItemSelected(item)
         }
 
-//
-        //Toast.makeText(this@MainActivity, " " + selectedItemTitle + " " + name, Toast.LENGTH_LONG).show()
-
         return true
     }
+
+
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
 
@@ -180,6 +183,28 @@ class MainActivity : AppCompatActivity(){
         }
     }
 
+    private fun buildDialogWithView(mDialogView: View?, data: CodeData?): AlertDialog.Builder? {
+        return AlertDialog.Builder(this@MainActivity)
+            .setView(mDialogView)
+            .setTitle("Details")
+            .setPositiveButton("Edit") { _, _ ->
+                // the positive button will enable editing
+                startCustomActivity(this, ScannerActivity::class, data)
+            }
+            .setNegativeButton("Cancel") { dialog, _ ->
+                dialog.cancel()
+            }
+    }
+
+    private fun buildParameterisedView(data: CodeData?): View? {
+        val mDialogView = LayoutInflater.from(this).inflate(R.layout.data_details, null)
+        mDialogView.timestamp_details.text = data?.timestampCreated
+        mDialogView.companyField_details.text = data?.companyName
+        mDialogView.toField_details.text = data?.destination
+        mDialogView.fromField_details.text = data?.source
+        mDialogView.description_details.text = data?.description
+        return mDialogView
+    }
 
     private fun setFilterCategories(ctx: Context){
         // based on: https://camposha.info/kotlin-android-spinner-fill-from-array-and-itemselectionlistener
@@ -303,12 +328,18 @@ class MainActivity : AppCompatActivity(){
 
     private fun setupList(context: Context){
 
-        val data = logic?.getAll()
-        if(data != null){
-            // attaching a layout manager, then filling it with the given data using the adapter
-            mainAdapter = MainListAdapter(context, data) // hardcoded adapter will be used
-            mainList.adapter = mainAdapter
+        var data: List<CodeData>? = null
+        launch(Dispatchers.Main) {
+            data = logic?.getAll()
+            if(data != null){
+                // attaching a layout manager, then filling it with the given data using the adapter
+                mainAdapter = MainListAdapter(context, data!!) // hardcoded adapter will be used
+                mainList.adapter = mainAdapter
+            }
         }
+
+
+
 
     }
 }
