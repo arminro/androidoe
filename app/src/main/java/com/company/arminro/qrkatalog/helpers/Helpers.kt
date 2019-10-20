@@ -3,7 +3,7 @@ package com.company.arminro.qrkatalog.helpers
 import java.text.SimpleDateFormat
 import java.util.*
 import android.R.id.edit
-import android.arch.persistence.room.Room
+import androidx.room.Room
 import android.content.Context
 import android.content.SharedPreferences
 import android.preference.PreferenceManager
@@ -45,3 +45,4 @@ suspend fun loadDb(cont: Context) : QRDao{
     return QRDao_Impl(
         Room.databaseBuilder(cont, QRDataBase::class.java, "qr_db").build())
 }
+

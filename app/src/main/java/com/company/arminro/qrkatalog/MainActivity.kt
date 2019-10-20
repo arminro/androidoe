@@ -4,8 +4,8 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.os.Bundle
-import android.support.v7.app.AlertDialog
-import android.support.v7.app.AppCompatActivity
+import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatActivity
 import android.widget.*
 import kotlinx.android.synthetic.main.app_bar_main.*
 import android.app.DatePickerDialog
@@ -13,40 +13,54 @@ import android.app.TimePickerDialog
 import android.content.Intent
 import android.util.Log
 import android.view.*
+import androidx.lifecycle.ViewModelProvider
 import com.company.arminro.qrkatalog.data.QRDataBase
 import com.company.arminro.qrkatalog.model.CodeData
-import com.company.arminro.qrkatalog.helpers.MainListAdapter
+import com.company.arminro.qrkatalog.adapters.MainListAdapter
+import com.company.arminro.qrkatalog.data.Injector
 import kotlinx.android.synthetic.main.content_main.*
 import java.util.*
 import kotlin.reflect.KClass
 import com.company.arminro.qrkatalog.helpers.loadDataFromSharedPreferences
+import com.company.arminro.qrkatalog.helpers.nonNull
+import com.company.arminro.qrkatalog.helpers.observe
 import com.company.arminro.qrkatalog.helpers.saveDataToSharedPReferences
 import com.company.arminro.qrkatalog.logic.QRRepository
+import com.company.arminro.qrkatalog.vm.MainViewModel
+import com.company.arminro.qrkatalog.vm.VMFactory
 import kotlinx.android.synthetic.main.data_details.view.*
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.launch
+
 
 // using the main activity in coroutine context
 class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(){
 
     private var startMatchEnabled =  false
     private var endMatchEnabled =  false
-    private var mainAdapter: MainListAdapter? = null
+    private lateinit var mainAdapter: MainListAdapter
 
     // normally, this would be handled by a DI container like Dagger, but to keep it simple, we use Poor Man's DI here
-    private var logic: QRRepository? = null
+    private lateinit var mainVM: MainViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
 
-        val dao = QRDataBase.getInstance(this).qRDao()
-        if(dao != null){
-            logic = QRRepository(dao)
-        }
+
+        // setting up dependencies
+        val viewModelFactory = Injector.provideViewModelFactory(this)
+        mainVM = ViewModelProvider(this, viewModelFactory).get(MainViewModel::class.java)
+        mainAdapter = MainListAdapter(this, arrayListOf()) // init with empty data
+        mainList.adapter = mainAdapter
+
+            mainVM.listData
+            .nonNull()
+            .observe(this) {
+               mainList.invalidateViews() // updating the ui
+                Log.println(Log.ASSERT, "LIST", mainVM.listData.value.toString())
+            }
 
 
         startMatchEnabled = loadDataFromSharedPreferences(this, getString(R.string.settings_matches_start)) ?: false
@@ -57,19 +71,15 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(){
         // if we are given a new value, we save it to the db
 
         if(rawData != null){
-
-            launch(Dispatchers.IO) {
-                if(rawData.id == null){
-                    logic?.add(rawData) // smart cast!!! this will not compile without the null checking!
-                    val asd = logic?.getAll()
-                    Log.println(Log.INFO, "ADD","ADDED: ${asd.toString()}")
-                }
-                else{
-                    logic?.update(rawData)
-                }
-
-                mainAdapter?.notifyDataSetChanged()
+            if(rawData.id == Long.MIN_VALUE){
+                mainVM.add(rawData) // smart cast!!! this will not compile without the null checking!
             }
+            else{
+                mainVM.update(rawData)
+            }
+
+            mainAdapter?.notifyDataSetChanged()
+
             Toast.makeText(MainActivity@this, "Changes saved", Toast.LENGTH_SHORT).show()
         }
 
@@ -77,7 +87,6 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(){
             startCustomActivity(this, ScannerActivity::class)
         }
 
-        setupList(this)
         setFilterCategories(this)
         registerForContextMenu(mainList)
     }
@@ -326,21 +335,11 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(){
             insertPoint.removeAllViews()
     }
 
-    private fun setupList(context: Context){
-
-        var data: List<CodeData>? = null
-        launch(Dispatchers.Main) {
-            data = logic?.getAll()
-            if(data != null){
-                // attaching a layout manager, then filling it with the given data using the adapter
-                mainAdapter = MainListAdapter(context, data!!) // hardcoded adapter will be used
-                mainList.adapter = mainAdapter
-            }
-        }
 
 
 
 
-    }
+
 }
+
 

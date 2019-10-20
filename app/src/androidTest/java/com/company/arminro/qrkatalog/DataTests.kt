@@ -1,13 +1,14 @@
 package com.company.arminro.qrkatalog
 
-import android.arch.persistence.room.Room
-import android.support.test.InstrumentationRegistry
-import android.support.test.runner.AndroidJUnit4
+import androidx.room.Room
+import androidx.test.InstrumentationRegistry
+import androidx.test.runner.AndroidJUnit4
 import android.util.Log
 import com.company.arminro.qrkatalog.data.QRDao
 import com.company.arminro.qrkatalog.data.QRDataBase
 import com.company.arminro.qrkatalog.helpers.getCurrentDateTimeString
 import com.company.arminro.qrkatalog.model.CodeData
+import kotlinx.coroutines.runBlocking
 import org.hamcrest.Matchers.equalTo
 import org.junit.Assert
 import org.junit.Assert.assertThat
@@ -23,7 +24,7 @@ class DataTests {
     private lateinit var db: QRDataBase
     private lateinit var TIME: String
 
-    private fun testSetup(){
+    private fun testSetup() = runBlocking {
         // create new db and dao after every test to make sure it is isolated
         val context = InstrumentationRegistry.getContext()
         db = Room.inMemoryDatabaseBuilder(
@@ -39,7 +40,7 @@ class DataTests {
 
 
     @Test
-    fun addAndGetByIdTest() {
+    fun addAndGetByIdTest() = runBlocking  {
         testSetup()
         // arrange
         val code: CodeData = CodeData("Obuda University", "home", "gyujtoszamla", "osztondij", TIME )
@@ -54,7 +55,7 @@ class DataTests {
     }
 
     @Test
-    fun deleteTest() {
+    fun deleteTest() = runBlocking  {
         testSetup()
         // arrange
         val code: CodeData = CodeData("Obuda University", "home", "gyujtoszamla", "osztondij", TIME )
@@ -70,7 +71,7 @@ class DataTests {
     }
 
     @Test
-    fun getAllTest() {
+    fun getAllTest() = runBlocking  {
         testSetup()
         // arrange
         val code: CodeData = CodeData("Obuda University", "home", "gyujtoszamla", "osztondij", TIME )
@@ -94,7 +95,7 @@ class DataTests {
     }
 
     @Test
-    fun getAllByCompanyTest() {
+    fun getAllByCompanyTest() = runBlocking  {
         testSetup()
         // arrange
         val code: CodeData = CodeData("Obuda University", "home", "gyujtoszamla", "osztondij", TIME )
@@ -115,7 +116,7 @@ class DataTests {
     }
 
     @Test
-    fun getAllAfterTest() {
+    fun getAllAfterTest() = runBlocking  {
         testSetup()
         // arrange
         val reference = "20191012_100000"
@@ -137,7 +138,7 @@ class DataTests {
     }
 
     @Test
-    fun getAllBeforeTest() {
+    fun getAllBeforeTest() = runBlocking  {
         testSetup()
         // arrange
         val reference = "20191012_100000"
@@ -159,7 +160,7 @@ class DataTests {
     }
 
     @Test
-    fun getAllBetweenTest() {
+    fun getAllBetweenTest() = runBlocking  {
         testSetup()
         // arrange
         val code: CodeData = CodeData("Obuda University", "home", "gyujtoszamla", "osztondij", "20161010_100000" )
@@ -186,7 +187,7 @@ class DataTests {
     }
 
     @Test
-    fun getAllToTest() {
+    fun getAllToTest() = runBlocking  {
         testSetup()
         // arrange
         val code = CodeData("Obudai Egyetem", "home", "Becsi ut 96/B", "osztondij", TIME )
@@ -209,7 +210,7 @@ class DataTests {
     }
 
     @Test
-    fun getAllFromTest() {
+    fun getAllFromTest()  = runBlocking {
         testSetup()
         // arrange
         val code = CodeData("Obudai Egyetem", "home", "Becsi ut 96/B", "osztondij", TIME )
@@ -232,7 +233,7 @@ class DataTests {
     }
 
     @Test
-    fun updateTest() {
+    fun updateTest() = runBlocking  {
         testSetup()
         // arrange
         val code: CodeData = CodeData("Obuda University", "home", "gyujtoszamla", "osztondij", TIME )

@@ -5,10 +5,10 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.hardware.Camera
 import android.os.Bundle
-import android.support.v4.app.ActivityCompat
-import android.support.v4.content.ContextCompat
-import android.support.v7.app.AlertDialog
-import android.support.v7.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatActivity
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -22,12 +22,12 @@ import com.google.zxing.Result
 import kotlinx.android.synthetic.main.activity_scanner.*
 import kotlinx.android.synthetic.main.data_details.view.*
 import me.dm7.barcodescanner.zxing.ZXingScannerView
-import kotlin.properties.Delegates
 
 class ScannerActivity : AppCompatActivity(), ZXingScannerView.ResultHandler  {
     private var cameraId: Int = 0
     private var mScannerView: ZXingScannerView? = null
     private var dataToUpdate: CodeData? = null
+    private var dialogOpen = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -82,7 +82,7 @@ class ScannerActivity : AppCompatActivity(), ZXingScannerView.ResultHandler  {
             var resultData: CodeData? = validateResultString(text)
             resultData?.timestampCreated = getCurrentDateTimeString()
 
-            if (resultData != null) {
+            if (resultData != null && !dialogOpen) {
 
                 promptUserToSaveData(resultData)
             }
@@ -138,6 +138,7 @@ class ScannerActivity : AppCompatActivity(), ZXingScannerView.ResultHandler  {
     }
 
     private fun promptUserToSaveData(resultData: CodeData) {
+        dialogOpen = true
         // asking the user if s/he wants to save the valid data
         val mDialogView = createDialogView(resultData)
 
@@ -161,13 +162,12 @@ class ScannerActivity : AppCompatActivity(), ZXingScannerView.ResultHandler  {
         confirmString: String,
         resultData: CodeData
     ): AlertDialog.Builder? {
-        val mBuilder = AlertDialog.Builder(this@ScannerActivity)
+        mScannerView?.stopCamera()
+        mScannerView?.isActivated = false
+        return AlertDialog.Builder(this@ScannerActivity)
             .setView(mDialogView)
             .setTitle(titleString)
             .setPositiveButton(confirmString) { _, _ ->
-
-                // stopping the camera and sending data to the other activity
-                mScannerView?.stopCamera()
 
                 if(dataToUpdate != null){
                     resultData.id = dataToUpdate!!.id
@@ -179,8 +179,10 @@ class ScannerActivity : AppCompatActivity(), ZXingScannerView.ResultHandler  {
             }
             .setNegativeButton("Cancel") { dialog, _ ->
                 dialog.cancel()
+                mScannerView?.startCamera()
+                mScannerView?.isActivated = true
+                dialogOpen = false
             }
-        return mBuilder
     }
 
     private fun createDialogView(resultData: CodeData): View? {

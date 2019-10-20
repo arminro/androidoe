@@ -1,8 +1,8 @@
 package com.company.arminro.qrkatalog
 
-import android.arch.persistence.room.Room
-import android.support.test.InstrumentationRegistry
-import android.support.test.runner.AndroidJUnit4
+import androidx.room.Room
+import androidx.test.InstrumentationRegistry
+import androidx.test.runner.AndroidJUnit4
 import com.company.arminro.qrkatalog.data.QRDataBase
 import com.company.arminro.qrkatalog.helpers.getCurrentDateTimeString
 import com.company.arminro.qrkatalog.logic.QRRepository
@@ -33,7 +33,7 @@ class SimplifiedLogicTests{
     private val code5: CodeData = CodeData("Other_company", "ANYTHING home ANYTHING", "alamizsna", "my friend bought me dinner again",TEST_TIME )
 
     @Before
-    fun testSetup(){
+    fun testSetup() = runBlocking {
         val context = InstrumentationRegistry.getContext()
         db = Room.inMemoryDatabaseBuilder(context, QRDataBase::class.java).build()
         var repo  = db.qRDao()

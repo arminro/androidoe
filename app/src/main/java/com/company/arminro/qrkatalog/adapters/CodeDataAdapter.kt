@@ -1,8 +1,8 @@
-package com.company.arminro.qrkatalog.helpers
+package com.company.arminro.qrkatalog.adapters
 
 import android.content.Context
 import android.widget.TextView
-import android.support.v7.widget.RecyclerView
+import androidx.recyclerview.widget.RecyclerView
 import android.view.*
 import com.company.arminro.qrkatalog.R
 import com.company.arminro.qrkatalog.model.CodeData
@@ -15,7 +15,13 @@ class CodeDataAdapter(private val items : List<CodeData>, val context: Context)
     : RecyclerView.Adapter<ViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, position: Int): ViewHolder {
-        return ViewHolder(LayoutInflater.from(context).inflate(R.layout.data_list_element, parent, false))
+        return ViewHolder(
+            LayoutInflater.from(context).inflate(
+                R.layout.data_list_element,
+                parent,
+                false
+            )
+        )
     }
 
     override fun onBindViewHolder(parent: ViewHolder, position: Int) {

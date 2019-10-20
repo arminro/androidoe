@@ -1,4 +1,4 @@
-package com.company.arminro.qrkatalog.helpers
+package com.company.arminro.qrkatalog.adapters
 
 import android.content.Context
 import android.view.LayoutInflater

@@ -1,8 +1,8 @@
 package com.company.arminro.qrkatalog.model
 
-import android.arch.persistence.room.ColumnInfo
-import android.arch.persistence.room.Entity
-import android.arch.persistence.room.PrimaryKey
+import androidx.room.ColumnInfo
+import androidx.room.Entity
+import androidx.room.PrimaryKey
 import android.os.Parcelable
 import android.provider.SyncStateContract
 import kotlinx.android.parcel.Parcelize
@@ -19,7 +19,7 @@ data class CodeData(
     var description: String,
     var timestampCreated: String) : Parcelable{
 
-    @PrimaryKey(autoGenerate = true) var id: Long = 0
+    @PrimaryKey(autoGenerate = true) var id: Long = Long.MIN_VALUE
 }
 
 
