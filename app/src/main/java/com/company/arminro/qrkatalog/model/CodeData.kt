@@ -17,10 +17,11 @@ data class CodeData(
     @ColumnInfo(name = "dest") var destination: String,
     var source: String,
     var description: String,
-    var timestampCreated: String) : Parcelable{
+    var timestampCreated: String,
+    @PrimaryKey(autoGenerate = true) var id: Long = 0L) : Parcelable
 
-    @PrimaryKey(autoGenerate = true) var id: Long = Long.MIN_VALUE
-}
+
+
 
 
 

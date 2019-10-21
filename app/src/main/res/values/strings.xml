@@ -20,6 +20,7 @@
     <string name="list_filter">LIST_FILTER</string>
     <string name="start_match">START_MATCH</string>
     <string name="end_match">END_MATCH</string>
+    <string name="filter_text">filter</string>
     <string-array name="FilterCategories">
         <item>Select a category</item>
         <item>Source</item>

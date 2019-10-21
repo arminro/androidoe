@@ -39,7 +39,7 @@ class ScannerActivity : AppCompatActivity(), ZXingScannerView.ResultHandler  {
         /* having a mechanism to explicitly tell the scanner activity that it is performing an update
         * may be more elegant, but the scanner always scans a code then returns the result*/
 
-        dataToUpdate = extras?.get(getString(R.string.qr_data_intent_extra)) as? CodeData
+        dataToUpdate = extras?.getParcelable(getString(R.string.qr_data_intent_extra)) as? CodeData
 
         fab.setOnClickListener { view ->
             // todo: how to fire only on fab press
@@ -76,7 +76,7 @@ class ScannerActivity : AppCompatActivity(), ZXingScannerView.ResultHandler  {
 
 
     override fun handleResult(rawResult: Result) {
-        if (rawResult.text != null && rawResult.text.isNotEmpty() /*&& fab.isPressed*/) {
+        if (rawResult.text != null && rawResult.text.isNotEmpty() && fab.isPressed) {
             // parsing the text only if it is valid
             val text = rawResult.text
             var resultData: CodeData? = validateResultString(text)
@@ -86,11 +86,12 @@ class ScannerActivity : AppCompatActivity(), ZXingScannerView.ResultHandler  {
 
                 promptUserToSaveData(resultData)
             }
+            else if(fab.isPressed){
+                Toast.makeText(this, "The loaded QR Code is not valid", Toast.LENGTH_SHORT).show()
+            }
 
         }
-        else if(fab.isPressed){
-            Toast.makeText(this, "The loaded QR Code is not valid", Toast.LENGTH_SHORT)
-        }
+
         mScannerView?.resumeCameraPreview(this)
 
     }

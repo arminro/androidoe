@@ -2,12 +2,14 @@ package com.company.arminro.qrkatalog.vm
 
 import android.app.Application
 import android.provider.Settings
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.viewModelScope
 import com.company.arminro.qrkatalog.data.QRDao
 import com.company.arminro.qrkatalog.data.QRDataBase
 import com.company.arminro.qrkatalog.helpers.NonNullMediatorLiveData
+import com.company.arminro.qrkatalog.helpers.getCurrentDateTimeString
 import com.company.arminro.qrkatalog.logic.IRepository
 import com.company.arminro.qrkatalog.logic.QRRepository
 import com.company.arminro.qrkatalog.model.CodeData
@@ -29,10 +31,13 @@ class MainViewModel(private val repo: IRepository): ViewModelBase() {
     init{
         // setting the references
         //repo = QRRepository(QRDataBase.getInstance(app).qRDao())
+
     }
 
     fun getAll() = launch(coroutineContext) {
-        listDataMediator.postValue(repo.getAll())
+        var data = repo.getAll()
+        Log.println(Log.ASSERT, "GetALL_RESULT", data.toString())
+        listDataMediator.postValue(data)
     }
 
 
@@ -64,13 +69,15 @@ class MainViewModel(private val repo: IRepository): ViewModelBase() {
         currentItemMediator.postValue(repo.getById(id))
     }
 
-    fun add(dataToAdd: CodeData) = launch(coroutineContext) {
+    fun add(dataToAdd: CodeData) = launch(coroutineContext){
         repo.add(dataToAdd)
-        getAll() // updating the ui will all the elements
+        Log.println(Log.ASSERT, "ADD", dataToAdd.toString())
+        getAll() // updating the ui with all the elements
     }
 
     fun delete(dataToDelete: CodeData) = launch(coroutineContext) {
         repo.delete(dataToDelete)
+
         getAll() // updating the ui will all the elements
     }
 

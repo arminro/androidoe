@@ -48,42 +48,54 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(){
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
 
-
         // setting up dependencies
         val viewModelFactory = Injector.provideViewModelFactory(this)
         mainVM = ViewModelProvider(this, viewModelFactory).get(MainViewModel::class.java)
-        mainAdapter = MainListAdapter(this, arrayListOf()) // init with empty data
-        mainList.adapter = mainAdapter
 
-            mainVM.listData
-            .nonNull()
-            .observe(this) {
-               mainList.invalidateViews() // updating the ui
-                Log.println(Log.ASSERT, "LIST", mainVM.listData.value.toString())
-            }
-
-
+        // loading settings
         startMatchEnabled = loadDataFromSharedPreferences(this, getString(R.string.settings_matches_start)) ?: false
         endMatchEnabled = loadDataFromSharedPreferences(this, getString(R.string.end_match)) ?: false
-        val extras = intent.extras
 
-        val rawData = extras?.get(getString(R.string.qr_data_intent_extra)) as? CodeData
+        // handling data received
+        val extras = intent.extras
+        val rawData = extras?.getParcelable(getString(R.string.qr_data_intent_extra)) as? CodeData
         // if we are given a new value, we save it to the db
 
-        if(rawData != null){
-            if(rawData.id == Long.MIN_VALUE){
-                mainVM.add(rawData) // smart cast!!! this will not compile without the null checking!
+        try{
+            if(rawData != null){
+                if(rawData.id == 0L){
+                    mainVM.add(rawData) // smart cast!!! this will not compile without the null checking!
+                }
+                else{
+                    mainVM.update(rawData)
+                }
+                Toast.makeText(MainActivity@this, "Changes saved", Toast.LENGTH_SHORT).show()
             }
-            else{
-                mainVM.update(rawData)
-            }
-
-            mainAdapter?.notifyDataSetChanged()
-
-            Toast.makeText(MainActivity@this, "Changes saved", Toast.LENGTH_SHORT).show()
+        }
+        catch (ex: Exception){
+            Toast.makeText(MainActivity@this, "Changes could not be saved", Toast.LENGTH_SHORT).show()
+            Log.e("SAVE_ERROR", "Save could not be performed", ex)
         }
 
-        fab.setOnClickListener { view ->
+        // todo: figure out when to display data so that new data is visible
+        // todo: create additional qr codes
+        mainAdapter = MainListAdapter(this, arrayListOf()) // init with empty data
+        mainList.adapter = mainAdapter
+        mainVM.getAll()
+        //mainAdapter.addAll(mainVM.listData.value)
+        mainAdapter.notifyDataSetChanged()
+
+        mainVM.listData
+            .nonNull()
+            .observe(this) {
+                mainAdapter.clear() // this is very slow here
+                mainAdapter.addAll(it)
+                mainAdapter.notifyDataSetChanged()
+                //Log.println(Log.ASSERT, "LIST", mainVM.listData.value.toString())
+            }
+
+
+        fab.setOnClickListener {
             startCustomActivity(this, ScannerActivity::class)
         }
 
@@ -139,7 +151,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(){
             }
 
             R.id.mainListDelete ->{
-                // todo: delete
+                mainVM.delete(data!!)
                 return  true
             }
             else -> super.onOptionsItemSelected(item)
@@ -291,7 +303,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(){
                                 this@MainActivity,  DatePickerDialog.OnDateSetListener { _, year, monthOfYear, dayOfMonth ->
                                     // setting the text of the edit view
                                     edit.setText("$dayOfMonth th of ${monthOfYear+1}, $year") // month of the year is 0 based!
-                                    //todo: set variable here
+                                    //todo: set filter values here
                                 }, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH))
                                 .show()
                         }
@@ -312,7 +324,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(){
                                     .OnTimeSetListener(function = { _, h, m ->
                                         // setting the text of the edit view
                                         edit.setText("$h:${if(m < 10) "0$m" else m}") // to use 00
-                                        // todo: set variable here
+                                        //todo: set filter values here
                                     }), cal.get(Calendar.HOUR), cal.get(Calendar.MINUTE), true
                                 )
                                     .show()

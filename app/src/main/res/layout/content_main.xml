@@ -10,17 +10,39 @@
         tools:context=".MainActivity">
 
 
-    <Spinner
-            android:layout_width="346dp"
-            android:layout_height="27dp" tools:layout_editor_absoluteY="16dp"
-            android:id="@+id/filter"
-            app:layout_constraintStart_toStartOf="parent" app:layout_constraintHorizontal_bias="0.5"
-            app:layout_constraintEnd_toEndOf="parent"/>
-    <LinearLayout
-            android:orientation="vertical"
-            android:id="@+id/dynamic_anchor"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
+
+        <LinearLayout android:layout_width="match_parent"
+                      android:layout_height="wrap_content"
+                      android:background="@color/colorAccent"
+                      android:orientation="horizontal"
+                      android:paddingEnd="@dimen/activity_vertical_margin"
+                      app:layout_constraintStart_toStartOf="parent" app:layout_constraintHorizontal_bias="0.5"
+                      app:layout_constraintEnd_toEndOf="parent">
+            <Spinner
+                    android:layout_width="wrap_content"
+                    android:layout_height="27dp" tools:layout_editor_absoluteY="16dp"
+                    android:id="@+id/filter"/>
+            <Button
+                    android:text="@string/filter_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="right"
+                    tools:layout_editor_absoluteX="276dp" android:id="@+id/button"/>
+        </LinearLayout>
+        <LinearLayout
+                android:orientation="vertical"
+                android:id="@+id/dynamic_anchor"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="30dp"/>
+
+
+
+
+
+
+
+
 
     <ListView
             android:layout_width="match_parent"
@@ -39,6 +61,7 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintTop_toBottomOf="@id/dynamic_anchor" app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent" app:layout_constraintHorizontal_bias="0.5"/>
+
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

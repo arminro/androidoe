@@ -8,8 +8,15 @@ import android.widget.ArrayAdapter
 import com.company.arminro.qrkatalog.R
 import com.company.arminro.qrkatalog.model.CodeData
 import kotlinx.android.synthetic.main.data_list_element.view.*
+import android.R.attr.data
+import android.text.method.TextKeyListener.clear
+import androidx.recyclerview.widget.DiffUtil
 
-class MainListAdapter(context: Context, private val data: List<CodeData>) :
+
+
+
+
+class MainListAdapter(context: Context, private var data: List<CodeData>) :
     ArrayAdapter<CodeData>(context, R.layout.data_list_element, data) {
 
     override fun getCount(): Int {
@@ -42,6 +49,8 @@ class MainListAdapter(context: Context, private val data: List<CodeData>) :
         convertView.isLongClickable = true
         return convertView
     }
+
+
 
 
 }
