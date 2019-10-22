@@ -14,7 +14,6 @@ import android.content.Intent
 import android.util.Log
 import android.view.*
 import androidx.lifecycle.ViewModelProvider
-import com.company.arminro.qrkatalog.data.QRDataBase
 import com.company.arminro.qrkatalog.model.CodeData
 import com.company.arminro.qrkatalog.adapters.MainListAdapter
 import com.company.arminro.qrkatalog.data.Injector
@@ -25,10 +24,12 @@ import com.company.arminro.qrkatalog.helpers.loadDataFromSharedPreferences
 import com.company.arminro.qrkatalog.helpers.nonNull
 import com.company.arminro.qrkatalog.helpers.observe
 import com.company.arminro.qrkatalog.helpers.saveDataToSharedPReferences
-import com.company.arminro.qrkatalog.logic.QRRepository
 import com.company.arminro.qrkatalog.vm.MainViewModel
-import com.company.arminro.qrkatalog.vm.VMFactory
 import kotlinx.android.synthetic.main.data_details.view.*
+import kotlinx.android.synthetic.main.double_datetime_picker.*
+import kotlinx.android.synthetic.main.notification_template_lines_media.view.*
+import kotlinx.android.synthetic.main.search_filter.*
+import kotlinx.android.synthetic.main.single_datetime_picker.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.MainScope
 
@@ -36,8 +37,7 @@ import kotlinx.coroutines.MainScope
 // using the main activity in coroutine context
 class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(){
 
-    private var startMatchEnabled =  false
-    private var endMatchEnabled =  false
+
     private lateinit var mainAdapter: MainListAdapter
 
     // normally, this would be handled by a DI container like Dagger, but to keep it simple, we use Poor Man's DI here
@@ -53,8 +53,8 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(){
         mainVM = ViewModelProvider(this, viewModelFactory).get(MainViewModel::class.java)
 
         // loading settings
-        startMatchEnabled = loadDataFromSharedPreferences(this, getString(R.string.settings_matches_start)) ?: false
-        endMatchEnabled = loadDataFromSharedPreferences(this, getString(R.string.end_match)) ?: false
+        mainVM.setStartMatch(loadDataFromSharedPreferences(this, getString(R.string.settings_matches_start)) ?: false)
+        mainVM.setEndMatch(loadDataFromSharedPreferences(this, getString(R.string.end_match)) ?: false)
 
         // handling data received
         val extras = intent.extras
@@ -77,12 +77,9 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(){
             Log.e("SAVE_ERROR", "Save could not be performed", ex)
         }
 
-        // todo: figure out when to display data so that new data is visible
-        // todo: create additional qr codes
         mainAdapter = MainListAdapter(this, arrayListOf()) // init with empty data
         mainList.adapter = mainAdapter
         mainVM.getAll()
-        //mainAdapter.addAll(mainVM.listData.value)
         mainAdapter.notifyDataSetChanged()
 
         mainVM.listData
@@ -100,6 +97,17 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(){
         }
 
         setFilterCategories(this)
+        filter_button.setOnClickListener { v -> run {
+            filterData(filter?.selectedItem.toString())
+        }}
+
+        clear_filter_button.setOnClickListener { v -> run {
+            filterData(filter?.selectedItem.toString())
+            filterData("")
+            filter.setSelection(0)
+            mainVM.getAll()
+        }}
+
         registerForContextMenu(mainList)
     }
 
@@ -178,24 +186,24 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(){
 
                 // hooking switch isEnabled to local fields
                 var startSwitch  = mDialogView.findViewById<Switch>(R.id.startSwitch)
-                startSwitch.isChecked = startMatchEnabled
+                startSwitch.isChecked = mainVM.getStartMatch()
 
                 startSwitch.setOnCheckedChangeListener { _, isChecked ->
-                    startMatchEnabled = isChecked
+                    mainVM.setStartMatch(isChecked)
 
                     // save it to shared preferences for persistence, so that the options will remain after closing the app
                     saveDataToSharedPReferences(this, getString(R.string.settings_matches_start), isChecked)
 
-                    Toast.makeText(this@MainActivity, "Start ${if (startMatchEnabled) "enabled" else "disabled"}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@MainActivity, "Start ${if (mainVM.getStartMatch()) "enabled" else "disabled"}", Toast.LENGTH_SHORT).show()
                 }
 
                 var endSwitch  = mDialogView.findViewById<Switch>(R.id.endSwitch)
-                endSwitch.isChecked = endMatchEnabled
+                endSwitch.isChecked = mainVM.getEndMatch()
                 endSwitch.setOnCheckedChangeListener { _, isChecked ->
-                    endMatchEnabled = isChecked
+                    mainVM.setEndMatch(isChecked)
 
                     saveDataToSharedPReferences(this, getString(R.string.end_match), isChecked)
-                    Toast.makeText(this@MainActivity, "End ${if (endMatchEnabled) "enabled" else "disabled"}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@MainActivity, "End ${if (mainVM.getEndMatch()) "enabled" else "disabled"}", Toast.LENGTH_SHORT).show()
                 }
 
                 return true
@@ -268,9 +276,8 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(){
         val v = vi.inflate(layoutId, null)
 
         // insert into main view after removing all existing
-        val insertPoint = findViewById<ViewGroup>(anchorId)
         removeChildren(anchorId)
-        insertPoint.addView(
+        dynamic_anchor.addView(
             v,
             0,
             ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
@@ -302,8 +309,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(){
                             DatePickerDialog(
                                 this@MainActivity,  DatePickerDialog.OnDateSetListener { _, year, monthOfYear, dayOfMonth ->
                                     // setting the text of the edit view
-                                    edit.setText("$dayOfMonth th of ${monthOfYear+1}, $year") // month of the year is 0 based!
-                                    //todo: set filter values here
+                                    edit.setText("$year ${monthOfYear+1} $dayOfMonth)") // month of the year is 0 based!
                                 }, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH))
                                 .show()
                         }
@@ -324,7 +330,6 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(){
                                     .OnTimeSetListener(function = { _, h, m ->
                                         // setting the text of the edit view
                                         edit.setText("$h:${if(m < 10) "0$m" else m}") // to use 00
-                                        //todo: set filter values here
                                     }), cal.get(Calendar.HOUR), cal.get(Calendar.MINUTE), true
                                 )
                                     .show()
@@ -345,6 +350,46 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(){
         val insertPoint = findViewById<ViewGroup>(anchorId)
         if(insertPoint.childCount > 0)
             insertPoint.removeAllViews()
+    }
+
+    fun filterData(selected: String){
+        // we could use the strings xml to load the values
+        // but changing the file would result in different behavior (not necessarily leading to errors)
+
+        try{
+        when(selected){
+            "Source" ->  mainVM.getAllFrom(search_filter.query.toString())
+            "Destination" -> mainVM.getAllTo(search_filter.query.toString())
+            "Company" -> mainVM.getAllByCompany(search_filter.query.toString())
+            "Earlier than" -> {
+                // obviously this is only working in a very specific locale :(
+                var date = dateInput.text.toString().trim()
+                var time = timeInput.text.toString().trim(':')
+
+                mainVM.getAllBefore("${date}_$time")
+            }
+            "Later than" -> {
+                var date = dateInput.text.toString().trim()
+                var time = timeInput.text.toString().trim(':')
+
+                mainVM.getAllAfter("${date}_$time")
+            }
+            "Between" -> {
+                var dateBefore = dateInputStart.text.toString().trim()
+                var timeBefore = dateInputStart.text.toString().trim(':')
+                var dateAfter = dateInputEnd.text.toString().trim()
+                var timeAfter = dateInputEnd.text.toString().trim(':')
+
+                mainVM.getAllBetween("${dateBefore}_$timeBefore", "${dateAfter}_$timeAfter")
+            }
+            else -> mainVM.getAll()
+        }
+        }
+        catch (ex: Exception){
+            Toast.makeText(this, "Could not set the filter", Toast.LENGTH_SHORT).show()
+            Log.println(Log.ERROR,"FILTER", "Filter could not be set: ${ex.message}")
+        }
+
     }
 
 

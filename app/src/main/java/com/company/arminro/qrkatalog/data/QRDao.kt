@@ -13,10 +13,11 @@ interface QRDao {
 
     // interested in all the result where the destination appears in any form
     // interestingly this is not enough: https://stackoverflow.com/questions/44184769/android-room-select-query-with-like
-    @Query("SELECT * FROM codedata where codedata.company like :companyName")
+    // collation: https://stackoverflow.com/questions/16082575/sql-ignore-case-while-searching-for-a-string
+    @Query("SELECT * FROM codedata where codedata.company like :companyName collate SQL_Latin1_General_Cp1_CI_AS_KI_WI")
     suspend fun getAllByCompany(companyName: String): List<CodeData>
 
-    @Query("SELECT * FROM codedata where codedata.dest like :destination")
+    @Query("SELECT * FROM codedata where codedata.dest like :destination collate SQL_Latin1_General_Cp1_CI_AS_KI_WI")
     fun getAllTo(destination: String): List<CodeData>
 
     @Query("SELECT * FROM codedata where codedata.timestampCreated > :date")
@@ -28,7 +29,7 @@ interface QRDao {
     @Query("SELECT * FROM codedata where codedata.timestampCreated > :dateStart and codedata.timestampCreated < :dateEnd")
     fun getAllBetween(dateStart: String, dateEnd: String): List<CodeData>
 
-    @Query("SELECT * FROM codedata where codedata.source like :source")
+    @Query("SELECT * FROM codedata where codedata.source like :source collate SQL_Latin1_General_Cp1_CI_AS_KI_WI")
     fun getAllFrom(source: String): List<CodeData>
 
     @Query("SELECT * FROM codedata where codedata.id = :id")

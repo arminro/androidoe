@@ -35,13 +35,16 @@ abstract class QRDataBase : RoomDatabase() {
            return object : Callback() {
                override fun onCreate(db: SupportSQLiteDatabase) {
                    super.onCreate(db)
-                   GlobalScope.launch {
+                        GlobalScope.launch {
                        val dao = getInstance(context).qRDao()
-                       // todo: seed the db properly
-                       dao.add(CodeData("AMPE", "1083 Budapest, Futo st 37","905 SW. Cypress Lane Manchester, NH 03102",
-                           "New shipment of potatoes", getCurrentDateTimeString()))
-                       dao.add(CodeData("Omnica Corporation", "Hungary","Detroit",
-                           "Shipment of not at all odd looking robot things", getCurrentDateTimeString()))
+                            dao.add(CodeData("AMPE", "1083 Budapest, Futo st 37","905 SW. Cypress Lane Manchester",
+                                "New shipment of potatoes", getCurrentDateTimeString()))
+                            dao.add(CodeData("MyAwesomeCompany", "Hungary","Canada",
+                                "Facial recognition software solution with neural networks", "20181221_122100"))
+                            dao.add(CodeData("Omnica Corporation", "Hungary","Detroit",
+                                "Shipment of not at all odd looking robot things", getCurrentDateTimeString()))
+                            dao.add(CodeData("N7", "[unspecified]","Palaven",
+                                "Specter status not recognised", "21650411_142020"))
 
                    }
                }

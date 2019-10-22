@@ -19,25 +19,16 @@ class QRRepository(private val qrDao: QRDao) : IRepository {
         * - all results beginning with the desired word
         * - all results containing the word anywhere (both are true)
         * */
-        return if(endsWith && beginsWith)
-            qrDao.getAllByCompany("%$companyName%")
-        else if(endsWith && !beginsWith)
-            qrDao.getAllByCompany("%$companyName")
-        else if(!endsWith && beginsWith)
-            qrDao.getAllByCompany("$companyName%")
-        else
-            qrDao.getAllByCompany(companyName)
+
+        val prefix = calculateFix(beginsWith)
+        val postfix = calculateFix(endsWith)
+
+       return qrDao.getAllByCompany("$prefix$companyName$postfix")
     }
 
     override suspend fun getAllTo(destination: String, endsWith: Boolean, beginsWith: Boolean) :List<CodeData> {
-        return if(endsWith && beginsWith)
-            qrDao.getAllTo("%$destination%")
-        else if(endsWith && !beginsWith)
-            qrDao.getAllTo("%$destination")
-        else if(!endsWith && beginsWith)
-            qrDao.getAllTo("$destination%")
-        else
-            qrDao.getAllTo(destination)
+        // I just had to write this down once bc it is so beautiful
+      return qrDao.getAllTo("${if(beginsWith) "%" else ""}$destination${if(beginsWith) "%" else ""}")
     }
 
     override suspend fun getAllAfter(date: String) : List<CodeData> {
@@ -53,14 +44,10 @@ class QRRepository(private val qrDao: QRDao) : IRepository {
     }
 
     override suspend fun getAllFrom(source: String, endsWith: Boolean, beginsWith: Boolean) : List<CodeData> {
-        return if(endsWith && beginsWith)
-            qrDao.getAllTo("%$source%")
-        else if(endsWith && !beginsWith)
-            qrDao.getAllTo("%$source")
-        else if(!endsWith && beginsWith)
-            qrDao.getAllTo("$source%")
-        else
-            qrDao.getAllTo(source)
+        val prefix = calculateFix(beginsWith)
+        val postfix = calculateFix(endsWith)
+
+        return qrDao.getAllFrom("$prefix$source$postfix")
     }
 
     override suspend fun getById(id: Long) : CodeData {
@@ -77,5 +64,15 @@ class QRRepository(private val qrDao: QRDao) : IRepository {
 
     override suspend fun update(newData: CodeData) {
         qrDao.update(newData)
+    }
+
+    private fun calculateFix(flag: Boolean) : String{
+        return if(flag){
+            "%"
+        }
+
+        else{
+            ""
+        }
     }
 }

@@ -3,9 +3,11 @@ package com.company.arminro.qrkatalog.vm
 import android.app.Application
 import android.provider.Settings
 import android.util.Log
+import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.viewModelScope
+import com.company.arminro.qrkatalog.R
 import com.company.arminro.qrkatalog.data.QRDao
 import com.company.arminro.qrkatalog.data.QRDataBase
 import com.company.arminro.qrkatalog.helpers.NonNullMediatorLiveData
@@ -25,13 +27,43 @@ class MainViewModel(private val repo: IRepository): ViewModelBase() {
     private val currentItemMediator = NonNullMediatorLiveData<CodeData>()
     val cuurentItem = currentItemMediator
 
+    private var startMatchEnabled =  false
+    private var endMatchEnabled =  false
+    private var selectedFilterCategory = ""
 
 
+    fun getStartMatch() : Boolean {
+        return startMatchEnabled
+    }
 
-    init{
-        // setting the references
-        //repo = QRRepository(QRDataBase.getInstance(app).qRDao())
+    fun setStartMatch(current: Boolean)  {
+        startMatchEnabled = current
+    }
 
+    fun getEndMatch() : Boolean {
+        return endMatchEnabled
+    }
+
+    fun setEndMatch(current: Boolean)  {
+        endMatchEnabled = current
+    }
+
+
+    fun setSelectedFilterCategory(selected: String)  {
+        selectedFilterCategory = selected
+    }
+
+
+    fun getAllTo(destination: String){
+        if(destination.isBlank())
+            throw IllegalArgumentException("The destination must have a value")
+        getAllTo(destination, endMatchEnabled, startMatchEnabled)
+    }
+
+    fun getAllByCompany(companyName: String){
+        if(companyName.isBlank())
+            throw IllegalArgumentException("The company name must have a value")
+        getAllByCompany(companyName, endMatchEnabled, startMatchEnabled)
     }
 
     fun getAll() = launch(coroutineContext) {
@@ -40,29 +72,29 @@ class MainViewModel(private val repo: IRepository): ViewModelBase() {
         listDataMediator.postValue(data)
     }
 
-
-    fun getAllByCompany(companyName: String, endsWith: Boolean, beginsWith: Boolean) = launch(coroutineContext)  {
-        listDataMediator.postValue(repo.getAllByCompany(companyName, endsWith, beginsWith))
+    fun getAllFrom(source: String){
+        if(source.isBlank())
+            throw IllegalArgumentException("The property source must have a value")
+        getAllFrom(source, endMatchEnabled, startMatchEnabled)
     }
 
-    fun getAllTo(destination: String, endsWith: Boolean, beginsWith: Boolean) = launch(coroutineContext)  {
-        listDataMediator.postValue(repo.getAllTo(destination, endsWith, beginsWith))
-    }
 
     fun getAllAfter(date: String)  = launch(coroutineContext) {
+        if(date.isBlank())
+            throw IllegalArgumentException("The property date must have a value")
         listDataMediator.postValue(repo.getAllAfter(date))
     }
 
     fun getAllBefore(date: String) = launch(coroutineContext) {
+        if(date.isBlank())
+            throw IllegalArgumentException("The property date must have a value")
         listDataMediator.postValue(repo.getAllBefore(date))
     }
 
     fun getAllBetween(dateStart: String, dateEnd: String) = launch(coroutineContext) {
+        if(dateStart.isBlank() || dateEnd.isBlank())
+            throw IllegalArgumentException("Both properties must have a value")
         listDataMediator.postValue(repo.getAllBetween(dateStart, dateEnd))
-    }
-
-    fun getAllFrom(source: String, endsWith: Boolean, beginsWith: Boolean) = launch(coroutineContext) {
-        listDataMediator.postValue(repo.getAllFrom(source, endsWith, beginsWith))
     }
 
     fun getById(id: Long) = launch(coroutineContext) {
@@ -85,6 +117,23 @@ class MainViewModel(private val repo: IRepository): ViewModelBase() {
         repo.update(newData)
         getAll()
     }
+
+
+    // the view just sets the values where it needs to
+    private fun getAllByCompany(companyName: String, endsWith: Boolean, beginsWith: Boolean) = launch(coroutineContext)  {
+        listDataMediator.postValue(repo.getAllByCompany(companyName, endsWith, beginsWith))
+    }
+
+    private fun getAllTo(destination: String, endsWith: Boolean, beginsWith: Boolean) = launch(coroutineContext)  {
+        listDataMediator.postValue(repo.getAllTo(destination, endsWith, beginsWith))
+    }
+
+
+    private fun getAllFrom(source: String, endsWith: Boolean, beginsWith: Boolean) = launch(coroutineContext) {
+        listDataMediator.postValue(repo.getAllFrom(source, endsWith, beginsWith))
+    }
+
+
 
 
 

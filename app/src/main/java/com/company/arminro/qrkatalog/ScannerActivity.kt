@@ -42,7 +42,7 @@ class ScannerActivity : AppCompatActivity(), ZXingScannerView.ResultHandler  {
         dataToUpdate = extras?.getParcelable(getString(R.string.qr_data_intent_extra)) as? CodeData
 
         fab.setOnClickListener { view ->
-            // todo: how to fire only on fab press
+            // empty listener for zxing to get a button pressed event
         }
 
         title = "QR Scanner"

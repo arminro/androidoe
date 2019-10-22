@@ -14,13 +14,14 @@
     <string name="settings_matches_start">Allow matches on beginning of results</string>
     <string name="settings_matches_on_end_">Allow matches on end of results</string>
     <string name="data_list_company_text">Issuer</string>
-    <string name="data_list_from_text">Destination</string>
+    <string name="data_list_from_text">From</string>
     <string name="data_list_to_text">To</string>
     <string name="qr_data_intent_extra">qrdata</string>
     <string name="list_filter">LIST_FILTER</string>
     <string name="start_match">START_MATCH</string>
     <string name="end_match">END_MATCH</string>
     <string name="filter_text">filter</string>
+    <string name="clear_filter_text">clear</string>
     <string-array name="FilterCategories">
         <item>Select a category</item>
         <item>Source</item>
