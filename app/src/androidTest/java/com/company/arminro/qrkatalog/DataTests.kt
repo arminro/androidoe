@@ -8,13 +8,19 @@ import com.company.arminro.qrkatalog.data.QRDao
 import com.company.arminro.qrkatalog.data.QRDataBase
 import com.company.arminro.qrkatalog.helpers.getCurrentDateTimeString
 import com.company.arminro.qrkatalog.model.CodeData
+import com.company.arminro.qrkatalog.helpers.*
 import kotlinx.coroutines.runBlocking
 import org.hamcrest.Matchers.equalTo
+import org.joda.time.DateTime
 import org.junit.Assert
 import org.junit.Assert.assertThat
 import org.junit.Test
 import org.junit.runner.RunWith
 import java.io.IOException
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.util.*
+import kotlin.time.days
 
 // based on: https://gabrieltanner.org/blog/android-room
 @RunWith(AndroidJUnit4::class)
@@ -22,7 +28,7 @@ class DataTests {
     /*These are just very simplistic tests to check if the data layer is actually working*/
     private lateinit var dao: QRDao
     private lateinit var db: QRDataBase
-    private lateinit var TIME: String
+    private lateinit var TIME: Date
 
     private fun testSetup() = runBlocking {
         // create new db and dao after every test to make sure it is isolated
@@ -30,7 +36,7 @@ class DataTests {
         db = Room.inMemoryDatabaseBuilder(
             context, QRDataBase::class.java).build()
         dao = db.qRDao()
-        TIME = getCurrentDateTimeString()
+        TIME = getCurrentDateTime()
     }
 
     @Throws(IOException::class)
@@ -48,7 +54,7 @@ class DataTests {
         // act
         dao.add(code)
         val inDb: CodeData = dao.getAll()[0]
-
+        inDb.id = 0
         // assert
         assertThat(inDb, equalTo(code))
         testTeardown()
@@ -85,7 +91,7 @@ class DataTests {
 
         // act
         val result = dao.getAll()
-
+        result.forEach { r->r.id = 0 } // the ids are autoincremented
         // assert
         Assert.assertTrue(result is List<CodeData>)
 
@@ -109,7 +115,7 @@ class DataTests {
 
         // act
         val result = dao.getAllByCompany("%Obuda%")
-
+        result.forEach { r->r.id = 0 } // the ids are autoincremented
         // assert
         Assert.assertEquals(result.toSet(), data)
         testTeardown()
@@ -119,19 +125,20 @@ class DataTests {
     fun getAllAfterTest() = runBlocking  {
         testSetup()
         // arrange
-        val reference = "20191012_100000"
-        val code: CodeData = CodeData("Obuda University", "home", "gyujtoszamla", "osztondij", "20191201_122100" )
-        val code2: CodeData = CodeData("Obuda University", "home", "gyujtoszamla", "demo", reference )
-        val code3: CodeData = CodeData("Workplace", "home", "company_bill", "wage", "20191221_122100" )
+        val reference = DateTime.now()
 
-        val data = setOf(code, code3)
+        val code: CodeData = CodeData("Obuda University", "home", "gyujtoszamla", "osztondij",  reference.minusDays(5).toDate())
+        val code2: CodeData = CodeData("Obuda University", "home", "gyujtoszamla", "demo", reference.toDate() )
+        val code3: CodeData = CodeData("Workplace", "home", "company_bill", "wage", reference.plusDays(5).toDate() )
+
+        val data = setOf(code3)
         dao.add(code)
         dao.add(code2)
         dao.add(code3)
 
         // act
-        val result = dao.getAllAfter(reference)
-
+        val result = dao.getAllAfter(reference.toDate())
+        result.forEach { r->r.id = 0 } // the ids are autoincremented
         // assert
         Assert.assertEquals(result.toSet(), data)
         testTeardown()
@@ -141,21 +148,22 @@ class DataTests {
     fun getAllBeforeTest() = runBlocking  {
         testSetup()
         // arrange
-        val reference = "20191012_100000"
-        val code: CodeData = CodeData("Obuda University", "home", "gyujtoszamla", "osztondij", "20181201_122100" )
-        val code2: CodeData = CodeData("Obuda University", "home", "gyujtoszamla", "demo", reference )
-        val code3: CodeData = CodeData("Workplace", "home", "company_bill", "wage", "20181221_122100" )
+        val date =  DateTime(2019, 10, 12, 5, 5, 5)
 
-        val data = setOf(code, code3)
+        val code: CodeData = CodeData("Obuda University", "home", "gyujtoszamla", "osztondij", date.toDate() )
+        val code2: CodeData = CodeData("Obuda University", "home", "gyujtoszamla", "demo", date.minusYears(1).toDate() )
+        val code3: CodeData = CodeData("Workplace", "home", "company_bill", "wage", date.plusYears(1).toDate() )
+
+        val data = setOf(code2)
         dao.add(code)
         dao.add(code2)
         dao.add(code3)
 
         // act
-        val result = dao.getAllBefore(reference)
-
+        val result = dao.getAllBefore(code.timestampCreated)
+        result.forEach { r->r.id = 0 } // the ids are autoincremented
         // assert
-        Assert.assertEquals(result.toSet(), data)
+        Assert.assertEquals(data, result.toSet())
         testTeardown()
     }
 
@@ -163,13 +171,13 @@ class DataTests {
     fun getAllBetweenTest() = runBlocking  {
         testSetup()
         // arrange
-        val code: CodeData = CodeData("Obuda University", "home", "gyujtoszamla", "osztondij", "20161010_100000" )
-        val code2: CodeData = CodeData("Obuda University", "home", "gyujtoszamla", "demo", "20191112_100000" )
-        val code3: CodeData = CodeData("Workplace", "home", "company_bill", "wage", "20191118_200000" )
-        val code4: CodeData = CodeData("Other_company", "home", "alamizsna", "my friend bought me dinner lol", "20201112_100000" )
+        val code: CodeData = CodeData("Obuda University", "home", "gyujtoszamla", "osztondij",DateTime(2016, 10, 10, 10, 0, 0).toDate())
+        val code2: CodeData = CodeData("Obuda University", "home", "gyujtoszamla", "demo", DateTime(2019, 11, 12, 10, 0, 0).toDate())
+        val code3: CodeData = CodeData("Workplace", "home", "company_bill", "wage", DateTime(2019, 11, 18, 20, 0, 0).toDate())
+        val code4: CodeData = CodeData("Other_company", "home", "alamizsna", "my friend bought me dinner lol", DateTime(2020, 12, 12, 10, 0, 0).toDate())
         // proper date generation is api 26 :(
-        val referenceStart = "20191012_100000"
-        val referenceEnd = "20191201_191919"
+        val referenceStart = DateTime(2018, 10, 12, 10, 0, 0)
+        val referenceEnd = DateTime(2020, 12, 1,1, 19, 19 )
 
 
         val data = setOf(code2, code3)
@@ -179,10 +187,10 @@ class DataTests {
         dao.add(code4)
 
         // act
-        val result = dao.getAllBetween(referenceStart, referenceEnd)
-
+        val result = dao.getAllBetween(referenceStart.toDate(), referenceEnd.toDate())
+        result.forEach { r->r.id = 0 } // the ids are autoincremented
         // assert
-        Assert.assertEquals(result.toSet(), data)
+        Assert.assertEquals(data, result.toSet())
         testTeardown()
     }
 
@@ -203,7 +211,7 @@ class DataTests {
 
         // act
         val result = dao.getAllTo("%home%")
-
+        result.forEach { r->r.id = 0 } // the ids are autoincremented
         // assert
         Assert.assertEquals(result.toSet(), data)
         testTeardown()
@@ -226,7 +234,7 @@ class DataTests {
 
         // act
         val result = dao.getAllFrom("%becs%") // upper/lowercase ignored by default :)
-
+        result.forEach { r->r.id = 0 } // the ids are autoincremented
         // assert
         Assert.assertEquals(result.toSet(), data)
         testTeardown()

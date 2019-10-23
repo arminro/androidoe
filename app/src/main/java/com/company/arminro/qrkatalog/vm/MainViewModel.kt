@@ -16,6 +16,7 @@ import com.company.arminro.qrkatalog.logic.IRepository
 import com.company.arminro.qrkatalog.logic.QRRepository
 import com.company.arminro.qrkatalog.model.CodeData
 import kotlinx.coroutines.*
+import java.util.*
 import java.util.concurrent.Callable
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
@@ -24,8 +25,6 @@ class MainViewModel(private val repo: IRepository): ViewModelBase() {
 
     private val listDataMediator = NonNullMediatorLiveData<List<CodeData>>()
     val listData = listDataMediator
-    private val currentItemMediator = NonNullMediatorLiveData<CodeData>()
-    val cuurentItem = currentItemMediator
 
     private var startMatchEnabled =  false
     private var endMatchEnabled =  false
@@ -79,27 +78,18 @@ class MainViewModel(private val repo: IRepository): ViewModelBase() {
     }
 
 
-    fun getAllAfter(date: String)  = launch(coroutineContext) {
-        if(date.isBlank())
-            throw IllegalArgumentException("The property date must have a value")
+    fun getAllAfter(date: Date)  = launch(coroutineContext) {
         listDataMediator.postValue(repo.getAllAfter(date))
     }
 
-    fun getAllBefore(date: String) = launch(coroutineContext) {
-        if(date.isBlank())
-            throw IllegalArgumentException("The property date must have a value")
+    fun getAllBefore(date: Date) = launch(coroutineContext) {
         listDataMediator.postValue(repo.getAllBefore(date))
     }
 
-    fun getAllBetween(dateStart: String, dateEnd: String) = launch(coroutineContext) {
-        if(dateStart.isBlank() || dateEnd.isBlank())
-            throw IllegalArgumentException("Both properties must have a value")
+    fun getAllBetween(dateStart: Date, dateEnd: Date) = launch(coroutineContext) {
         listDataMediator.postValue(repo.getAllBetween(dateStart, dateEnd))
     }
 
-    fun getById(id: Long) = launch(coroutineContext) {
-        currentItemMediator.postValue(repo.getById(id))
-    }
 
     fun add(dataToAdd: CodeData) = launch(coroutineContext){
         repo.add(dataToAdd)

@@ -4,6 +4,7 @@ import androidx.room.Room
 import androidx.test.InstrumentationRegistry
 import androidx.test.runner.AndroidJUnit4
 import com.company.arminro.qrkatalog.data.QRDataBase
+import com.company.arminro.qrkatalog.helpers.getCurrentDateTime
 import com.company.arminro.qrkatalog.helpers.getCurrentDateTimeString
 import com.company.arminro.qrkatalog.logic.QRRepository
 import com.company.arminro.qrkatalog.model.CodeData
@@ -23,7 +24,7 @@ class SimplifiedLogicTests{
 
     private lateinit var logic: QRRepository
     private lateinit var db: QRDataBase
-    private var TEST_TIME: String = getCurrentDateTimeString()
+    private var TEST_TIME  = getCurrentDateTime()
 
     // initializing the test with some data
     private val code: CodeData = CodeData("Obuda University", "ANYTHING home", "gyujtoszamla", "osztondij",TEST_TIME )
@@ -61,7 +62,7 @@ class SimplifiedLogicTests{
 
         // act
         val result = logic.getAllTo("home")
-
+        result.forEach { r->r.id = 0 }
         // assert
         Assert.assertEquals(desired, result?.toSet())
     }
@@ -74,7 +75,7 @@ class SimplifiedLogicTests{
 
         // act
         val result = logic.getAllTo("%home")
-
+        result.forEach { r->r.id = 0 }
         // assert
         Assert.assertEquals(desired, result?.toSet())
     }
@@ -87,6 +88,7 @@ class SimplifiedLogicTests{
 
         // act
         val result = logic.getAllTo("home%")
+        result.forEach { r->r.id = 0 }
 
         // assert
         Assert.assertEquals(desired, result?.toSet())
@@ -101,7 +103,7 @@ class SimplifiedLogicTests{
 
         // act
         val result = logic.getAllTo("%home%")
-
+        result.forEach { r->r.id = 0 }
         // assert
         Assert.assertEquals(desired, result?.toSet())
     }

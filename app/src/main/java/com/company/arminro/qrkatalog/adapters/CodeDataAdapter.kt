@@ -29,7 +29,7 @@ class CodeDataAdapter(private val items : List<CodeData>, val context: Context)
         // acquiring an element and filling the appropriate textview with value
         val codeDataElement = items[position]
         parent.company?.text = codeDataElement.companyName
-        parent.timeStamp?.text = codeDataElement.timestampCreated
+        parent.timeStamp?.text = codeDataElement.timestampCreated.toString()
         parent.from?.text = codeDataElement.source
         parent.to?.text = codeDataElement.destination
 

@@ -14,6 +14,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.widget.FrameLayout
 import android.widget.Toast
+import com.company.arminro.qrkatalog.helpers.getCurrentDateTime
 import com.company.arminro.qrkatalog.helpers.getCurrentDateTimeString
 import com.company.arminro.qrkatalog.model.CodeData
 import com.google.gson.Gson
@@ -80,7 +81,7 @@ class ScannerActivity : AppCompatActivity(), ZXingScannerView.ResultHandler  {
             // parsing the text only if it is valid
             val text = rawResult.text
             var resultData: CodeData? = validateResultString(text)
-            resultData?.timestampCreated = getCurrentDateTimeString()
+            resultData?.timestampCreated = getCurrentDateTime()
 
             if (resultData != null && !dialogOpen) {
 
@@ -192,7 +193,7 @@ class ScannerActivity : AppCompatActivity(), ZXingScannerView.ResultHandler  {
         mDialogView.description_details.text = resultData.description
         mDialogView.fromField_details.text = resultData.source
         mDialogView.toField_details.text = resultData.destination
-        mDialogView.timestamp_details.text = resultData.timestampCreated
+        mDialogView.timestamp_details.text = resultData.timestampCreated.toString()
         return mDialogView
     }
 

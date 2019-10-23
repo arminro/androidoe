@@ -21,13 +21,13 @@ interface QRDao {
     fun getAllTo(destination: String): List<CodeData>
 
     @Query("SELECT * FROM codedata where codedata.timestampCreated > :date")
-    fun getAllAfter(date: String): List<CodeData>
+    fun getAllAfter(date: Date): List<CodeData>
 
     @Query("SELECT * FROM codedata where codedata.timestampCreated < :date")
-    fun getAllBefore(date: String): List<CodeData>
+    fun getAllBefore(date: Date): List<CodeData>
 
     @Query("SELECT * FROM codedata where codedata.timestampCreated > :dateStart and codedata.timestampCreated < :dateEnd")
-    fun getAllBetween(dateStart: String, dateEnd: String): List<CodeData>
+    fun getAllBetween(dateStart: Date, dateEnd: Date): List<CodeData>
 
     @Query("SELECT * FROM codedata where codedata.source like :source collate SQL_Latin1_General_Cp1_CI_AS_KI_WI")
     fun getAllFrom(source: String): List<CodeData>

@@ -5,13 +5,18 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import android.content.Context
-import com.company.arminro.qrkatalog.helpers.getCurrentDateTimeString
+import androidx.room.TypeConverters
+import com.company.arminro.qrkatalog.helpers.TimeConverters
+import com.company.arminro.qrkatalog.helpers.getCurrentDateTime
 import com.company.arminro.qrkatalog.model.CodeData
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import org.joda.time.DateTime
+import java.util.*
 import java.util.concurrent.Executors
 
-@Database(entities = arrayOf(CodeData::class), version = 3)
+@Database(entities = arrayOf(CodeData::class), version = 4)
+@TypeConverters(TimeConverters::class)
 abstract class QRDataBase : RoomDatabase() {
     abstract fun qRDao(): QRDao
 
@@ -36,15 +41,16 @@ abstract class QRDataBase : RoomDatabase() {
                override fun onCreate(db: SupportSQLiteDatabase) {
                    super.onCreate(db)
                         GlobalScope.launch {
+
                        val dao = getInstance(context).qRDao()
                             dao.add(CodeData("AMPE", "1083 Budapest, Futo st 37","905 SW. Cypress Lane Manchester",
-                                "New shipment of potatoes", getCurrentDateTimeString()))
+                                "New shipment of potatoes", getCurrentDateTime()))
                             dao.add(CodeData("MyAwesomeCompany", "Hungary","Canada",
-                                "Facial recognition software solution with neural networks", "20181221_122100"))
+                                "Facial recognition software solution with neural networks", DateTime(2018, 12, 21, 10, 10, 10).toDate()))
                             dao.add(CodeData("Omnica Corporation", "Hungary","Detroit",
-                                "Shipment of not at all odd looking robot things", getCurrentDateTimeString()))
+                                "Shipment of not at all odd looking robot things", getCurrentDateTime()))
                             dao.add(CodeData("N7", "[unspecified]","Palaven",
-                                "Specter status not recognised", "21650411_142020"))
+                                "Specter status not recognised", DateTime(2165, 4, 11, 12, 12, 12).toDate()))
 
                    }
                }

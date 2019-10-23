@@ -17,7 +17,7 @@ data class CodeData(
     @ColumnInfo(name = "dest") var destination: String,
     var source: String,
     var description: String,
-    var timestampCreated: String,
+    var timestampCreated: Date,
     @PrimaryKey(autoGenerate = true) var id: Long = 0L) : Parcelable
 
 

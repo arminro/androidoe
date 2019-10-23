@@ -32,6 +32,9 @@ import kotlinx.android.synthetic.main.search_filter.*
 import kotlinx.android.synthetic.main.single_datetime_picker.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.MainScope
+import org.joda.time.DateTime
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 
 // using the main activity in coroutine context
@@ -227,7 +230,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(){
 
     private fun buildParameterisedView(data: CodeData?): View? {
         val mDialogView = LayoutInflater.from(this).inflate(R.layout.data_details, null)
-        mDialogView.timestamp_details.text = data?.timestampCreated
+        mDialogView.timestamp_details.text = data?.timestampCreated.toString()
         mDialogView.companyField_details.text = data?.companyName
         mDialogView.toField_details.text = data?.destination
         mDialogView.fromField_details.text = data?.source
@@ -309,7 +312,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(){
                             DatePickerDialog(
                                 this@MainActivity,  DatePickerDialog.OnDateSetListener { _, year, monthOfYear, dayOfMonth ->
                                     // setting the text of the edit view
-                                    edit.setText("$year ${monthOfYear+1} $dayOfMonth)") // month of the year is 0 based!
+                                    edit.setText("$year-${monthOfYear+1}-$dayOfMonth") // month of the year is 0 based!
                                 }, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH))
                                 .show()
                         }
@@ -363,16 +366,23 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(){
             "Company" -> mainVM.getAllByCompany(search_filter.query.toString())
             "Earlier than" -> {
                 // obviously this is only working in a very specific locale :(
-                var date = dateInput.text.toString().trim()
-                var time = timeInput.text.toString().trim(':')
+                var date = dateInput.text.toString()
+                var time = timeInput.text.toString().split(':')
 
-                mainVM.getAllBefore("${date}_$time")
+                var newDate = DateTime(date)
+                newDate.plusHours(time[0].toInt())
+                newDate.plusMinutes(time[1].toInt())
+                mainVM.getAllBefore(newDate.toDate())
             }
             "Later than" -> {
-                var date = dateInput.text.toString().trim()
-                var time = timeInput.text.toString().trim(':')
+                var date = dateInput.text.toString()
+                var time = timeInput.text.toString().split(':')
 
-                mainVM.getAllAfter("${date}_$time")
+                var newDate = DateTime(date)
+                newDate.plusHours(time[0].toInt())
+                newDate.plusMinutes(time[1].toInt())
+
+                mainVM.getAllAfter(newDate.toDate())
             }
             "Between" -> {
                 var dateBefore = dateInputStart.text.toString().trim()
@@ -380,7 +390,16 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(){
                 var dateAfter = dateInputEnd.text.toString().trim()
                 var timeAfter = dateInputEnd.text.toString().trim(':')
 
-                mainVM.getAllBetween("${dateBefore}_$timeBefore", "${dateAfter}_$timeAfter")
+
+                var newDateBefore = DateTime(dateBefore)
+                newDateBefore.plusHours(timeBefore[0].toInt())
+                newDateBefore.plusMinutes(timeBefore[1].toInt())
+
+                var newDateAfter = DateTime(dateAfter)
+                newDateAfter.plusHours(timeAfter[0].toInt())
+                newDateAfter.plusMinutes(timeAfter[1].toInt())
+
+                mainVM.getAllBetween(newDateBefore.toDate(), newDateAfter.toDate())
             }
             else -> mainVM.getAll()
         }

@@ -3,6 +3,7 @@ package com.company.arminro.qrkatalog.logic
 import androidx.lifecycle.LiveData
 import com.company.arminro.qrkatalog.data.QRDao
 import com.company.arminro.qrkatalog.model.CodeData
+import java.util.*
 
 
 class QRRepository(private val qrDao: QRDao) : IRepository {
@@ -31,15 +32,15 @@ class QRRepository(private val qrDao: QRDao) : IRepository {
       return qrDao.getAllTo("${if(beginsWith) "%" else ""}$destination${if(beginsWith) "%" else ""}")
     }
 
-    override suspend fun getAllAfter(date: String) : List<CodeData> {
+    override suspend fun getAllAfter(date: Date) : List<CodeData> {
         return qrDao.getAllAfter(date)
     }
 
-    override suspend fun getAllBefore(date: String) : List<CodeData> {
+    override suspend fun getAllBefore(date: Date) : List<CodeData> {
         return qrDao.getAllBefore(date)
     }
 
-    override suspend fun getAllBetween(dateStart: String, dateEnd: String) : List<CodeData> {
+    override suspend fun getAllBetween(dateStart: Date, dateEnd: Date) : List<CodeData> {
         return qrDao.getAllBetween(dateStart, dateEnd)
     }
 

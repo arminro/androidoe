@@ -19,7 +19,7 @@ fun Date.toString(format: String, locale: Locale = Locale.getDefault()): String 
     return formatter.format(this)
 }
 
-private fun getCurrentDateTime(): Date {
+fun getCurrentDateTime(): Date {
     return Calendar.getInstance().time
 }
 
@@ -41,8 +41,4 @@ fun loadDataFromSharedPreferences(cont: Context, settingName: String) : Boolean?
         .getBoolean(settingName, false)
 }
 
-suspend fun loadDb(cont: Context) : QRDao{
-    return QRDao_Impl(
-        Room.databaseBuilder(cont, QRDataBase::class.java, "qr_db").build())
-}
 

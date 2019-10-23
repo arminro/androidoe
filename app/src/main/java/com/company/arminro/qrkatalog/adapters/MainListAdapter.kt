@@ -41,7 +41,7 @@ class MainListAdapter(context: Context, private var data: List<CodeData>) :
         // setting the appropriate element texts
         val codeDataElement = data[position]
         convertView.companyField.text = codeDataElement.companyName
-        convertView.timestamp.text = codeDataElement.timestampCreated
+        convertView.timestamp.text = codeDataElement.timestampCreated.toString()
         convertView.fromField.text = codeDataElement.source
         convertView.toField.text = codeDataElement.destination
 
