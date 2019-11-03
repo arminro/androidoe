@@ -105,8 +105,6 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(){
         }}
 
         clear_filter_button.setOnClickListener { v -> run {
-            filterData(filter?.selectedItem.toString())
-            filterData("")
             filter.setSelection(0)
             mainVM.getAll()
         }}
@@ -147,9 +145,9 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(){
         val info = item?.menuInfo as AdapterView.AdapterContextMenuInfo
         val listPosition = info.position
 
-        val data = mainAdapter?.getItem(listPosition)
+        val data = mainAdapter.getItem(listPosition)
 
-        return when (item!!.itemId) {
+        return when (item.itemId) {
             R.id.mainListDetails ->{
 
                 val mDialogView = buildParameterisedView(data)
@@ -197,7 +195,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(){
                     // save it to shared preferences for persistence, so that the options will remain after closing the app
                     saveDataToSharedPReferences(this, getString(R.string.settings_matches_start), isChecked)
 
-                    Toast.makeText(this@MainActivity, "Start ${if (mainVM.getStartMatch()) "enabled" else "disabled"}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@MainActivity, "EndMatch ${if (mainVM.getStartMatch()) "enabled" else "disabled"}", Toast.LENGTH_SHORT).show()
                 }
 
                 var endSwitch  = mDialogView.findViewById<Switch>(R.id.endSwitch)
@@ -206,7 +204,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(){
                     mainVM.setEndMatch(isChecked)
 
                     saveDataToSharedPReferences(this, getString(R.string.end_match), isChecked)
-                    Toast.makeText(this@MainActivity, "End ${if (mainVM.getEndMatch()) "enabled" else "disabled"}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@MainActivity, "StartMatch ${if (mainVM.getEndMatch()) "enabled" else "disabled"}", Toast.LENGTH_SHORT).show()
                 }
 
                 return true
@@ -275,10 +273,13 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(){
     private fun inflateAppropriateView(layoutId: Int, anchorId: Int){
         // dynamic view loading based on: https://stackoverflow.com/questions/6216547/android-dynamically-add-views-into-view
 
-        val vi = applicationContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
-        val v = vi.inflate(layoutId, null)
+        removeChildren(anchorId)
+        var v = layoutInflater.inflate(layoutId, null)
+        //v.id = (0..10).random()
 
-        // insert into main view after removing all existing
+
+
+         //insert into main view after removing all existing
         removeChildren(anchorId)
         dynamic_anchor.addView(
             v,
@@ -351,23 +352,29 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(){
 
     private fun removeChildren(anchorId: Int){
         val insertPoint = findViewById<ViewGroup>(anchorId)
-        if(insertPoint.childCount > 0)
+        if(insertPoint.childCount > 0){
+            var onlyChild = insertPoint.getChildAt(0)
+            if(onlyChild is ViewGroup)
+                onlyChild.removeAllViews()
             insertPoint.removeAllViews()
+        }
+
     }
 
     fun filterData(selected: String){
         // we could use the strings xml to load the values
         // but changing the file would result in different behavior (not necessarily leading to errors)
 
+
         try{
         when(selected){
-            "Source" ->  mainVM.getAllFrom(search_filter.query.toString())
-            "Destination" -> mainVM.getAllTo(search_filter.query.toString())
-            "Company" -> mainVM.getAllByCompany(search_filter.query.toString())
+            "Source" ->  mainVM.getAllFrom(findViewById<SearchView>(R.id.search_filter).query.toString())
+            "Destination" -> mainVM.getAllTo(findViewById<SearchView>(R.id.search_filter).query.toString())
+            "Company" -> mainVM.getAllByCompany(findViewById<SearchView>(R.id.search_filter).query.toString())
             "Earlier than" -> {
                 // obviously this is only working in a very specific locale :(
-                var date = dateInput.text.toString()
-                var time = timeInput.text.toString().split(':')
+                var date = findViewById<EditText>(R.id.dateInput).text.toString()
+                var time = findViewById<EditText>(R.id.timeInput).text.toString().split(':')
 
                 var newDate = DateTime(date)
                 newDate.plusHours(time[0].toInt())
@@ -375,8 +382,8 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(){
                 mainVM.getAllBefore(newDate.toDate())
             }
             "Later than" -> {
-                var date = dateInput.text.toString()
-                var time = timeInput.text.toString().split(':')
+                var date = findViewById<EditText>(R.id.dateInput).text.toString()
+                var time = findViewById<EditText>(R.id.timeInput).text.toString().split(':')
 
                 var newDate = DateTime(date)
                 newDate.plusHours(time[0].toInt())
@@ -385,10 +392,13 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(){
                 mainVM.getAllAfter(newDate.toDate())
             }
             "Between" -> {
-                var dateBefore = dateInputStart.text.toString().trim()
-                var timeBefore = dateInputStart.text.toString().trim(':')
-                var dateAfter = dateInputEnd.text.toString().trim()
-                var timeAfter = dateInputEnd.text.toString().trim(':')
+                var before = findViewById<EditText>(R.id.dateInputStart)
+                var dateBefore = before.text.toString().trim()
+                var timeBefore = before.text.toString().trim(':')
+
+                var after = findViewById<EditText>(R.id.dateInputEnd)
+                var dateAfter = after.text.toString().trim()
+                var timeAfter = after.text.toString().trim(':')
 
 
                 var newDateBefore = DateTime(dateBefore)
