@@ -28,8 +28,10 @@ class QRRepository(private val qrDao: QRDao) : IRepository {
     }
 
     override suspend fun getAllTo(destination: String, endsWith: Boolean, beginsWith: Boolean) :List<CodeData> {
-        // I just had to write this down once bc it is so beautiful
-      return qrDao.getAllTo("${if(beginsWith) "%" else ""}$destination${if(beginsWith) "%" else ""}")
+        val prefix = calculateFix(beginsWith)
+        val postfix = calculateFix(endsWith)
+
+      return qrDao.getAllTo("$prefix$destination$postfix")
     }
 
     override suspend fun getAllAfter(date: Date) : List<CodeData> {
